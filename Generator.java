@@ -3,47 +3,76 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class Generator {
 	
+	// The start and end times of the schedule (in 24-hour format)
 	public static int start = 8;
 	public static int end = 16;
-	private ArrayList<Volunteer> schedules;
-	private Shift[][] shiftTimes;
+	
+	// A collection of volunteer class schedules
+	private ArrayList<Volunteer> timeTables;
+	
+	// An array to hold the final shift schedule
+	private Shift[][] schedule;
 	
 	public Generator() {
-		shiftTimes = new Shift[5][end-start];
+		schedule = new Shift[5][end-start];
 		for(int i = 0; i < 5; ++i) {
 			for(int j = 0; j < (end-start); ++j) {
-				shiftTimes[i][j] = new Shift();
+				schedule[i][j] = new Shift();
 			}
 		}
-		schedules = new ArrayList<Volunteer>();
+		timeTables = new ArrayList<Volunteer>();
 	}
 	
-	public Volunteer addSchedule(String name) {
+	/**
+	 * @param name	name of the volunteer being added
+	 * @return	the Generator object
+	 */
+	public Generator addSchedule(String name) {
 		Volunteer vol = new Volunteer(name);
-		schedules.add(vol);
-		return vol;
+		timeTables.add(vol);
+		return this;
 	}
 	
-	public Volunteer addSchedule(String name, String code) {
+	/**
+	 * @param name	the name of the volunteer being added
+	 * @param code	a binary code corresponding to the volunteer's availability
+	 * @return	the Generator object
+	 */
+	public Generator addSchedule(String name, String code) {
 		Volunteer vol = new Volunteer(name);
 		vol.setSchedule(code);
-		schedules.add(vol);
-		return vol;
+		timeTables.add(vol);
+		return this;
 	}
 	
+	/**
+	 * @return	the daily schedule start time (a positive integer 0 - 24)
+	 */
 	public int getStart() {
 		return start;
 	}
 	
+	/**
+	 * @return	the daily schedule end time (a positive integer 0 - 24)
+	 */
 	public int getEnd() {
 		return end;
 	}
 	
-	public void setAvailability(int index, int day, int hour, boolean Availability) {
-		schedules.get(index).setAvailability(day, hour, Availability);
+	
+	/**
+	 * Sets the availability of a certain volunteer at a certain hour
+	 * @param index	the index number of the specified volunteer
+	 * @param day	the day that is being modified
+	 * @param hour	the hour that is being modified (0 - 24, must be in range of daily shift times)
+	 * @param avail	boolean value corresponding to whether or not the volunteer is available at the specified hour
+	 */
+	public void setAvailability(int index, int day, int hour, boolean avail) {
+		timeTables.get(index).setAvailability(day, hour, avail);
 	}
 	
 	public void loadSchedule() {
@@ -66,55 +95,55 @@ public class Generator {
 		}
 	}
 	
-	// You're using bubblesort; please use something else for efficiency
-	// You're using the word "schedule" for a lot of different things here. Please reconsider.
-	public void sortSchedules(ArrayList<Volunteer> toSort) {
-		boolean isSorted = false;
-		while(!isSorted) {
-			isSorted = true;
-			for(int i = 0; i < toSort.size()-1; ++i) {
-				if (toSort.get(i).getAvailableHours(shiftTimes) > toSort.get(i+1).getAvailableHours(shiftTimes)) {
-					isSorted = false;
-					Volunteer temp = toSort.get(i);
-					toSort.set(i, toSort.get(i+1));
-					toSort.set(i+1, temp);
-				}
+	public Generator sortTables() {	
+		for(int i = 1; i < timeTables.size();++i) {
+			Volunteer toCompare = timeTables.get(i);
+			int j = i - 1;
+			while(j >= 0 && timeTables.get(j).getAvailableHours(schedule) > toCompare.getAvailableHours(schedule)) {
+				timeTables.set(j+1, timeTables.get(j));
+				j--;
 			}
+			timeTables.set(j+1, toCompare);
 		}
+		for(int i = 0; i < timeTables.size(); ++i) {
+			System.out.println(timeTables.get(i).getAvailableHours(schedule));
+		}
+		return this;
 	}
 	
-	public void generateSchedule() {
+	public Generator generateSchedule() {
 		for(int i = 0; i < 5; ++i) {
 			for(int j = 0; j < (end-start); ++j) {
-				shiftTimes[i][j].unschedule();
+				schedule[i][j].unschedule();
 			}
 		}
-		ArrayList<Volunteer> people = (ArrayList<Volunteer>)schedules.clone(); // [FIX THIS] That's a weird warning there
-		sortSchedules(people);
+		ArrayList<Volunteer> people = (ArrayList<Volunteer>)timeTables.clone();
+		sortTables();
 		while(people.size() > 0) {
-			int first = people.get(0).getFirstAvailable(shiftTimes);
+			int first = people.get(0).getFirstAvailable(schedule);
 			int i = first / (end-start);
 			int j = first % (end-start);
 			if (i >= 0 && j >= 0) {
-				shiftTimes[i][j].register(people.get(0));
-				first = people.get(0).getFirstAvailable(shiftTimes);
+				schedule[i][j].register(people.get(0));
+				first = people.get(0).getFirstAvailable(schedule);
 				i = first / (end-start);
 				j = first % (end-start);
 				if(i >= 0 && j >= 0) {
-					shiftTimes[i][j].register(people.get(0));
+					schedule[i][j].register(people.get(0));
 				}
 			}
 			people.remove(0);
 		}
+		return this;
 	}
 	
-	public void displaySchedule() {
+	public Generator displaySchedule() {
 		System.out.println();
 		System.out.println("Time\t\tLunes\t\tMartes\t\tMiércoles\tJueves\t\tViernes\n");
 		for(int time = 0; time < (end-start); ++time) {
 			System.out.print(start + time + ":00\t\t");
 			for(int day = 0; day < 5; ++day) {
-				Volunteer[] vols = shiftTimes[day][time].getVolunteers();
+				Volunteer[] vols = schedule[day][time].getVolunteers();
 				String spot1 = (vols[0] != null) ? vols[0].getCutName() : "EMPTY";
 				String spot2 = (vols[1] != null) ? vols[1].getCutName() : "EMPTY";
 				System.out.print(spot1 + "|" +  spot2 + "\t");
@@ -123,6 +152,7 @@ public class Generator {
 			System.out.println();
 		}
 		System.out.println();
+		return this;
 	}
 	
 	public static void main(String[] args) {
@@ -130,16 +160,7 @@ public class Generator {
 		Generator schedule = new Generator();
 		schedule.loadSchedule();
 		
-		for(int i = 0; i < schedule.schedules.size(); ++i) {
-			System.out.println(schedule.schedules.get(i).getName());
-			schedule.schedules.get(i).displaySchedule();
-			ArrayList<shiftAddress> twoGs = twoGroups.getTwoGroups(schedule.schedules.get(i));
-			for (int j = 0; j < twoGs.size(); ++j) {
-				System.out.println(twoGs.get(j).getDay() + " " + twoGs.get(j).getTime());
-			}
-		}
-		
-		/*System.out.println("Welcome to \"Shifter\"");
+		System.out.println("Welcome to \"Shifter\"");
 		System.out.println("The options are: [1] create new schedule, [2] modify schedule, [3] view final schedule, [4] quit");
 		System.out.println("What is your option?");
 		Scanner input = new Scanner(System.in);
@@ -153,7 +174,7 @@ public class Generator {
 				String name = input.next();
 				System.out.print("Enter the name of the schedule's binary code: ");
 				String code = input.next();
-				Volunteer table = schedule.addSchedule(name, code);
+				schedule.addSchedule(name, code).;
 				table.displaySchedule();
 				System.out.println();
 			} else if (option == 2) {
@@ -186,6 +207,6 @@ public class Generator {
 			option = input.nextInt();
 		}
 		
-		input.close();*/
+		input.close();
 	}
 }

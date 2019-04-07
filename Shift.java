@@ -52,7 +52,7 @@ public class Shift {
 	}
 	
 	public void unschedule() {
-		pair[0] = null;  // [FIX THIS] Do you REALLY need start and end times? They are a source of duplicated information
+		pair[0] = null;
 		pair[1] = null;
 	}
 	
