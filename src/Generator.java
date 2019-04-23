@@ -174,8 +174,8 @@ public class Generator {
 				String name = input.next();
 				System.out.print("Enter the name of the schedule's binary code: ");
 				String code = input.next();
-				schedule.addSchedule(name, code);
-				schedule.displaySchedule();
+				schedule.addSchedule(name, code).;
+				table.displaySchedule();
 				System.out.println();
 			} else if (option == 2) {
 				System.out.print("\n--[ MODIFYING SCHEDULE ]--\n");
