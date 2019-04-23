@@ -1,0 +1,3 @@
+- go through and make sure that (a) all getters are free of privacy leaks, and (b) all objects have copy constructors to use to prevent privacy leaks
+- go through and comment the code, make it clear, etc.
+- test out all parts of the code separately to ensure no errors
