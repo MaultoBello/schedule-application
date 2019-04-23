@@ -15,15 +15,10 @@ public class Generator {
 	private ArrayList<Volunteer> timeTables;
 	
 	// An array to hold the final shift schedule
-	private Shift[][] schedule;
+	private Volunteer[][][] schedule;
 	
 	public Generator() {
-		schedule = new Shift[5][end-start];
-		for(int i = 0; i < 5; ++i) {
-			for(int j = 0; j < (end-start); ++j) {
-				schedule[i][j] = new Shift();
-			}
-		}
+		schedule = new Volunteer[5][end-start][2];
 		timeTables = new ArrayList<Volunteer>();
 	}
 	
@@ -95,6 +90,21 @@ public class Generator {
 		}
 	}
 	
+	// You have to pass the schedule object as a parameter; is this what you WANT to do?
+	static boolean isFull(Volunteer[][][] sched, int day, int hour) {
+		return sched[day][hour][0] != null && sched[day][hour][1] != null;
+	}
+	
+	void register(int day, int hour, Volunteer vol) {
+		if (!isFull(schedule, day, hour)) {
+			if (schedule[day][hour][0] == null) {
+				schedule[day][hour][0] = new Volunteer(vol);
+			} else {
+				schedule[day][hour][1] = new Volunteer(vol);
+			}
+		}
+	}
+	
 	public Generator sortTables() {	
 		for(int i = 1; i < timeTables.size();++i) {
 			Volunteer toCompare = timeTables.get(i);
@@ -114,7 +124,8 @@ public class Generator {
 	public Generator generateSchedule() {
 		for(int i = 0; i < 5; ++i) {
 			for(int j = 0; j < (end-start); ++j) {
-				schedule[i][j].unschedule();
+				schedule[i][j][0] = null;
+				schedule[i][j][1] = null;
 			}
 		}
 		ArrayList<Volunteer> people = (ArrayList<Volunteer>)timeTables.clone();
@@ -124,12 +135,12 @@ public class Generator {
 			int i = first / (end-start);
 			int j = first % (end-start);
 			if (i >= 0 && j >= 0) {
-				schedule[i][j].register(people.get(0));
+				register(i, j, people.get(0));
 				first = people.get(0).getFirstAvailable(schedule);
 				i = first / (end-start);
 				j = first % (end-start);
 				if(i >= 0 && j >= 0) {
-					schedule[i][j].register(people.get(0));
+					register(i, j, people.get(0));
 				}
 			}
 			people.remove(0);
@@ -143,9 +154,8 @@ public class Generator {
 		for(int time = 0; time < (end-start); ++time) {
 			System.out.print(start + time + ":00\t\t");
 			for(int day = 0; day < 5; ++day) {
-				Volunteer[] vols = schedule[day][time].getVolunteers();
-				String spot1 = (vols[0] != null) ? vols[0].getCutName() : "EMPTY";
-				String spot2 = (vols[1] != null) ? vols[1].getCutName() : "EMPTY";
+				String spot1 = (schedule[day][time][0] != null) ? schedule[day][time][0].getCutName() : "EMPTY";
+				String spot2 = (schedule[day][time][1] != null) ? schedule[day][time][1].getCutName() : "EMPTY";
 				System.out.print(spot1 + "|" +  spot2 + "\t");
 				
 			}

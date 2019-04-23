@@ -90,11 +90,11 @@ public class Volunteer {
 		}
 	}
 	
-	public int getAvailableHours(Shift[][] schedule) {
+	public int getAvailableHours(Volunteer[][][] schedule) {
 		int AvailableHours = 0;
 		for(int i = 0; i < 5; ++i) {
 			for(int j = 0; j < (end-start); ++j) {
-				if (availability[i][j] == true && !schedule[i][j].isFull()) {
+				if (availability[i][j] == true && !Generator.isFull(schedule, i, j)) {
 					++AvailableHours;
 				}
 			}
@@ -102,12 +102,12 @@ public class Volunteer {
 		return AvailableHours;
 	}
 	
-	public int getFirstAvailable(Shift[][] schedule) {
+	public int getFirstAvailable(Volunteer[][][] schedule) {
 		int first = -1;
 		boolean found = false;
 		for(int i = 0; i < 5 && !found; ++i) {
 			for(int j = 0; j < (end-start) && !found; ++j) {
-				if (availability[i][j] == true && !schedule[i][j].isFull()) {
+				if (availability[i][j] == true && !Generator.isFull(schedule, i, j)) {
 					first = i*(end-start)+j;
 					found = true;
 				}
