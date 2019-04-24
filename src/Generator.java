@@ -8,8 +8,8 @@ import java.util.Collections;
 public class Generator {
 	
 	// The start and end times of the schedule (in 24-hour format)
-	public static int start = 8;
-	public static int end = 16;
+	public static final int start = 8;
+	public static final int end = 16;
 	
 	// A collection of volunteer class schedules
 	private ArrayList<Volunteer> timeTables;
@@ -17,28 +17,24 @@ public class Generator {
 	// An array to hold the final shift schedule
 	private Volunteer[][][] schedule;
 	
+	/**
+	 * Creates a new generator object with an empty schedule
+	 * and no volunteers
+	 */
 	public Generator() {
 		schedule = new Volunteer[5][end-start][2];
 		timeTables = new ArrayList<Volunteer>();
 	}
 	
 	/**
-	 * @param name	name of the volunteer being added
-	 * @return	the Generator object
-	 */
-	public Generator addSchedule(String name) {
-		Volunteer vol = new Volunteer(name);
-		timeTables.add(vol);
-		return this;
-	}
-	
-	/**
+	 * Adds a volunteer to the generator's database with a binary
+	 * code that corresponds to the volunteers weekly availability
 	 * @param name	the name of the volunteer being added
 	 * @param code	a binary code corresponding to the volunteer's availability
 	 * @return	the Generator object
 	 */
 	public Generator addSchedule(String name, String code) {
-		Volunteer vol = new Volunteer(name);
+		Volunteer vol = new Volunteer(name, code);
 		vol.setSchedule(code);
 		timeTables.add(vol);
 		return this;
@@ -63,14 +59,17 @@ public class Generator {
 	 * Sets the availability of a certain volunteer at a certain hour
 	 * @param index	the index number of the specified volunteer
 	 * @param day	the day that is being modified
-	 * @param hour	the hour that is being modified (0 - 24, must be in range of daily shift times)
+	 * @param hour	the hour that is being modified
 	 * @param avail	boolean value corresponding to whether or not the volunteer is available at the specified hour
 	 */
 	public void setAvailability(int index, int day, int hour, boolean avail) {
 		timeTables.get(index).setAvailability(day, hour, avail);
 	}
 	
-	public void loadSchedule() {
+	/**
+	 * Loads saved volunteer time tables from a file
+	 */
+	public void loadTimeTables() {
 		BufferedReader input = null;
 		try {
 			input = new BufferedReader(new FileReader("testData.txt"));
@@ -78,10 +77,12 @@ public class Generator {
 			System.out.println("Could not open file!");
 			System.exit(-1);
 		}
-		String current;
+		String line;
 		try {
-			while((current = input.readLine()) != null) {
-				String[] data = current.split(" ");
+			while((line = input.readLine()) != null) {
+				
+				// Each line is formatted as "NAME [SPACE] CODE"
+				String[] data = line.split(" ");
 				this.addSchedule(data[0], data[1]);
 			}	
 		} catch (IOException e) {
@@ -89,38 +90,54 @@ public class Generator {
 			System.exit(-1);
 		}
 	}
-	
-	// You have to pass the schedule object as a parameter; is this what you WANT to do?
-	static boolean isFull(Volunteer[][][] sched, int day, int hour) {
-		return sched[day][hour][0] != null && sched[day][hour][1] != null;
+
+	/**
+	 * @param day	the day that is being tested for
+	 * @param hour	the hour that is being tested for
+	 * @return	boolean value corresponding to whether or not the shift is full
+	 */
+	boolean isFull(int day, int hour) {
+		return schedule[day][hour][0] != null && schedule[day][hour][1] != null;
 	}
 	
-	void register(int day, int hour, Volunteer vol) {
-		if (!isFull(schedule, day, hour)) {
+	/**
+	 * @param day	the day being registered in
+	 * @param hour	the hour being registered in
+	 * @param vol	the volunteer being registered
+	 * @return	the Generator object
+	 */
+	Generator register(int day, int hour, Volunteer vol) {
+		if (!isFull(day, hour)) {
 			if (schedule[day][hour][0] == null) {
 				schedule[day][hour][0] = new Volunteer(vol);
 			} else {
 				schedule[day][hour][1] = new Volunteer(vol);
 			}
 		}
+		return this;
 	}
 	
+	/**
+	 * Sorts the volunteer time tables in order of least hours available to most hours available
+	 * @return	the Generator object
+	 */
 	public Generator sortTables() {	
-		for(int i = 1; i < timeTables.size();++i) {
+		for(int i = 1; i < timeTables.size(); ++i) {
 			Volunteer toCompare = timeTables.get(i);
 			int j = i - 1;
-			while(j >= 0 && timeTables.get(j).getAvailableHours(schedule) > toCompare.getAvailableHours(schedule)) {
+			while(j >= 0 && timeTables.get(j).getAvailableHours(this) > toCompare.getAvailableHours(this)) {
 				timeTables.set(j+1, timeTables.get(j));
 				j--;
 			}
 			timeTables.set(j+1, toCompare);
 		}
-		for(int i = 0; i < timeTables.size(); ++i) {
-			System.out.println(timeTables.get(i).getAvailableHours(schedule));
-		}
 		return this;
 	}
 	
+	/**
+	 * Generates the shift schedule
+	 * @return	the Generator object
+	 */
 	public Generator generateSchedule() {
 		for(int i = 0; i < 5; ++i) {
 			for(int j = 0; j < (end-start); ++j) {
@@ -131,12 +148,12 @@ public class Generator {
 		ArrayList<Volunteer> people = (ArrayList<Volunteer>)timeTables.clone();
 		sortTables();
 		while(people.size() > 0) {
-			int first = people.get(0).getFirstAvailable(schedule);
+			int first = people.get(0).getFirstAvailable(this);
 			int i = first / (end-start);
 			int j = first % (end-start);
 			if (i >= 0 && j >= 0) {
 				register(i, j, people.get(0));
-				first = people.get(0).getFirstAvailable(schedule);
+				first = people.get(0).getFirstAvailable(this);
 				i = first / (end-start);
 				j = first % (end-start);
 				if(i >= 0 && j >= 0) {
@@ -148,6 +165,10 @@ public class Generator {
 		return this;
 	}
 	
+	/**
+	 * Displays the schedule in ASCII format
+	 * @return the Generator object
+	 */
 	public Generator displaySchedule() {
 		System.out.println();
 		System.out.println("Time\t\tLunes\t\tMartes\t\tMiércoles\tJueves\t\tViernes\n");
@@ -168,7 +189,7 @@ public class Generator {
 	public static void main(String[] args) {
 		
 		Generator schedule = new Generator();
-		schedule.loadSchedule();
+		schedule.loadTimeTables();
 		
 		System.out.println("Welcome to \"Shifter\"");
 		System.out.println("The options are: [1] create new schedule, [2] modify schedule, [3] view final schedule, [4] quit");
