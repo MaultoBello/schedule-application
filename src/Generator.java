@@ -8,21 +8,26 @@ import java.util.Collections;
 public class Generator {
 	
 	// The start and end times of the schedule (in 24-hour format)
-	public static final int start = 8;
-	public static final int end = 16;
+	private final int start = 8;
+	private final int end = 16;
+
+	private final int numOfSched = 20;
 	
 	// A collection of volunteer class schedules
 	private ArrayList<Volunteer> timeTables;
 	
-	// An array to hold the final shift schedule
-	private Volunteer[][][] schedule;
+	// An array to hold the current population of schedules
+	private Schedule[] population;
 	
 	/**
 	 * Creates a new generator object with an empty schedule
 	 * and no volunteers
 	 */
 	public Generator() {
-		schedule = new Volunteer[5][end-start][2];
+		population = new Schedule[numOfSched];
+		for(int i = 0; i < numOfSched; ++i) {
+			population[i] = new Schedule(this);
+		}
 		timeTables = new ArrayList<Volunteer>();
 	}
 	
@@ -33,8 +38,8 @@ public class Generator {
 	 * @param code	a binary code corresponding to the volunteer's availability
 	 * @return	the Generator object
 	 */
-	public Generator addSchedule(String name, String code) {
-		Volunteer vol = new Volunteer(name, code);
+	public Generator addTimeTable(String name, String code) {
+		Volunteer vol = new Volunteer(name, code, this);
 		vol.setSchedule(code);
 		timeTables.add(vol);
 		return this;
@@ -53,7 +58,6 @@ public class Generator {
 	public int getEnd() {
 		return end;
 	}
-	
 	
 	/**
 	 * Sets the availability of a certain volunteer at a certain hour

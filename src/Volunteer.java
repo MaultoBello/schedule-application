@@ -1,25 +1,20 @@
 public class Volunteer {
 	
-	private int start = Generator.start;
-	private int end = Generator.end;
-	
 	private String name;
 	private boolean[][] availability;
+	
+	Generator gen;
 	
 	/**
 	 * Creates a new volunteer with a name and a schedule of availability
 	 * @param name	name of the volunteer
 	 * @param code	binary code corresponding to volunteer availability
 	 */
-	public Volunteer(String name, String code) {
+	public Volunteer(String name, String code, Generator g) {
 		this.name = name;
+		gen = g;
+		availability = new boolean[5][gen.getEnd()-gen.getStart()];
 		this.setSchedule(code);
-		availability = new boolean[5][end-start];
-		for(int i = 0; i < 5; ++i) {
-			for (int j = 0; j < (end-start); ++j) {
-				availability[i][j] = false;
-			}
-		}
 	}
 	
 	/**
@@ -28,10 +23,11 @@ public class Volunteer {
 	 */
 	public Volunteer(Volunteer vol) {
 		this.name = vol.name;
-		availability = new boolean[5][end-start];
+		this.gen = vol.gen;
+		availability = new boolean[5][gen.getEnd()-gen.getStart()];
 		this.setSchedule(vol.getBinaryCode());
 	}
-	
+
 	/**
 	 * Converts a name to six letters plus a period. Used in the case
 	 * that a name gets too long to display properly.
@@ -52,8 +48,8 @@ public class Volunteer {
 	public Volunteer displaySchedule() {
 		System.out.println();
 		System.out.println("Time\t\tLunes\tMartes\tMiér.\tJueves\tViernes\n");
-		for(int time = 0; time < (end-start); ++time) {
-			System.out.print(start + time + ":00\t\t");
+		for(int time = 0; time < (gen.getEnd()-gen.getStart()); ++time) {
+			System.out.print(gen.getStart() + time + ":00\t\t");
 			for(int day = 0; day < 5; ++day) {
 				System.out.print(availability[day][time]+ "\t");
 			}
@@ -98,7 +94,7 @@ public class Volunteer {
 	public String getBinaryCode() {
 		String code = "";
 		for(int i = 0; i < 5; ++i) {
-			for(int j = 0; j < (end-start); ++j) {
+			for(int j = 0; j < (gen.getEnd()-gen.getStart()); ++j) {
 				if(availability[i][j] = true) {
 					code += "1";
 				} else {
@@ -116,10 +112,10 @@ public class Volunteer {
 	 */
 	public Volunteer setSchedule(String code) {
 		for(int i = 0; i < 5; ++i) {
-			for(int j = 0; j < (end-start); ++j) {
-				if(code.charAt(i*(end-start)+j) == '1') {
+			for(int j = 0; j < (gen.getEnd()-gen.getStart()); ++j) {
+				if(code.charAt(i*(gen.getEnd()-gen.getStart())+j) == '1') {
 					availability[i][j] = true;
-				} else if(code.charAt(i*(end-start)+j) == '0') {
+				} else if(code.charAt(i*(gen.getEnd()-gen.getStart())+j) == '0') {
 					availability[i][j] = false;
 				}
 			}
@@ -129,13 +125,12 @@ public class Volunteer {
 	
 	/**
 	 * Returns the number of hours available for this volunteer in regard to a specific schedule
-	 * @param gen the Generator object being compared to
 	 * @return	the number of hours available in relation to the provided generator schedule
 	 */
-	public int getAvailableHours(Generator gen) {
+	public int getAvailableHours() {
 		int AvailableHours = 0;
 		for(int i = 0; i < 5; ++i) {
-			for(int j = 0; j < (end-start); ++j) {
+			for(int j = 0; j < (gen.getEnd()-gen.getStart()); ++j) {
 				if (availability[i][j] == true && !gen.isFull(i, j)) {
 					++AvailableHours;
 				}
@@ -146,16 +141,15 @@ public class Volunteer {
 	
 	/**
 	 * Returns the first available hour in relation to a specific schedule
-	 * @param gen	the Generator object being compared to
 	 * @return	a number corresponding to the position of the first available hour
 	 */
-	public int getFirstAvailable(Generator gen) {
+	public int getFirstAvailable() {
 		int first = -1;
 		boolean found = false;
 		for(int i = 0; i < 5 && !found; ++i) {
-			for(int j = 0; j < (end-start) && !found; ++j) {
+			for(int j = 0; j < (gen.getEnd()-gen.getStart()) && !found; ++j) {
 				if (availability[i][j] == true && !gen.isFull(i, j)) {
-					first = i*(end-start)+j;
+					first = i*(gen.getEnd()-gen.getStart())+j;
 					found = true;
 				}
 			}
