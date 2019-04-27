@@ -1,3 +1,4 @@
 - go through and make sure that (a) all getters are free of privacy leaks, and (b) all objects have copy constructors to use to prevent privacy leaks
 - go through and comment the code, make it clear, etc.
 - find out why singletons are a bad design patter (dummy explanation please)
+- organize your code according to which methods belong to other methods or find out a way for organization

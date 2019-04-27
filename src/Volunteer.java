@@ -1,6 +1,7 @@
 public class Volunteer {
 	
 	private String name;
+	private String surname;
 	private boolean[][] availability;
 	
 	Generator gen;
@@ -10,11 +11,16 @@ public class Volunteer {
 	 * @param name	name of the volunteer
 	 * @param code	binary code corresponding to volunteer availability
 	 */
-	public Volunteer(String name, String code, Generator g) {
+	public Volunteer(String name, String surname, String code, Generator g) {
 		this.name = name;
+		this.surname = surname;
 		gen = g;
 		availability = new boolean[5][gen.getEnd()-gen.getStart()];
 		this.setSchedule(code);
+	}
+	
+	public boolean isSame(Volunteer vol) {
+		return vol.name == name && vol.surname == surname;
 	}
 	
 	/**
@@ -23,6 +29,7 @@ public class Volunteer {
 	 */
 	public Volunteer(Volunteer vol) {
 		this.name = vol.name;
+		this.surname = vol.surname;
 		this.gen = vol.gen;
 		availability = new boolean[5][gen.getEnd()-gen.getStart()];
 		this.setSchedule(vol.getBinaryCode());
@@ -64,6 +71,10 @@ public class Volunteer {
 	 */
 	public String getName() {
 		return name;
+	}
+	
+	public String getSurname() {
+		return surname;
 	}
 
 	/**
@@ -127,11 +138,11 @@ public class Volunteer {
 	 * Returns the number of hours available for this volunteer in regard to a specific schedule
 	 * @return	the number of hours available in relation to the provided generator schedule
 	 */
-	public int getAvailableHours() {
+	public int getAvailableHours(Schedule sched) {
 		int AvailableHours = 0;
 		for(int i = 0; i < 5; ++i) {
 			for(int j = 0; j < (gen.getEnd()-gen.getStart()); ++j) {
-				if (availability[i][j] == true && !gen.isFull(i, j)) {
+				if (availability[i][j] == true && !sched.isFull(i, j)) {
 					++AvailableHours;
 				}
 			}
@@ -143,12 +154,18 @@ public class Volunteer {
 	 * Returns the first available hour in relation to a specific schedule
 	 * @return	a number corresponding to the position of the first available hour
 	 */
-	public int getFirstAvailable() {
+	public int getFirstAvailable(Schedule sched) {
 		int first = -1;
 		boolean found = false;
 		for(int i = 0; i < 5 && !found; ++i) {
 			for(int j = 0; j < (gen.getEnd()-gen.getStart()) && !found; ++j) {
-				if (availability[i][j] == true && !gen.isFull(i, j)) {
+				if (availability[i][j] == true && !sched.isFull(i, j)) {
+					Volunteer[] vols = sched.volsAtPos(i, j);
+					if(!(vols[0] == null)) {
+						if(vols[0].isSame(this)) {
+							continue;
+						}
+					}
 					first = i*(gen.getEnd()-gen.getStart())+j;
 					found = true;
 				}

@@ -87,55 +87,12 @@ public class Generator {
 				
 				// Each line is formatted as "NAME [SPACE] CODE"
 				String[] data = line.split(" ");
-				this.addSchedule(data[0], data[1]);
+				this.addTimeTable(data[0], data[1]);
 			}	
 		} catch (IOException e) {
 			System.out.println("Could not read file!");
 			System.exit(-1);
 		}
-	}
-
-	/**
-	 * @param day	the day that is being tested for
-	 * @param hour	the hour that is being tested for
-	 * @return	boolean value corresponding to whether or not the shift is full
-	 */
-	boolean isFull(int day, int hour) {
-		return schedule[day][hour][0] != null && schedule[day][hour][1] != null;
-	}
-	
-	/**
-	 * @param day	the day being registered in
-	 * @param hour	the hour being registered in
-	 * @param vol	the volunteer being registered
-	 * @return	the Generator object
-	 */
-	Generator register(int day, int hour, Volunteer vol) {
-		if (!isFull(day, hour)) {
-			if (schedule[day][hour][0] == null) {
-				schedule[day][hour][0] = new Volunteer(vol);
-			} else {
-				schedule[day][hour][1] = new Volunteer(vol);
-			}
-		}
-		return this;
-	}
-	
-	/**
-	 * Sorts the volunteer time tables in order of least hours available to most hours available
-	 * @return	the Generator object
-	 */
-	public Generator sortTables() {	
-		for(int i = 1; i < timeTables.size(); ++i) {
-			Volunteer toCompare = timeTables.get(i);
-			int j = i - 1;
-			while(j >= 0 && timeTables.get(j).getAvailableHours(this) > toCompare.getAvailableHours(this)) {
-				timeTables.set(j+1, timeTables.get(j));
-				j--;
-			}
-			timeTables.set(j+1, toCompare);
-		}
-		return this;
 	}
 	
 	/**
@@ -169,27 +126,6 @@ public class Generator {
 		return this;
 	}
 	
-	/**
-	 * Displays the schedule in ASCII format
-	 * @return the Generator object
-	 */
-	public Generator displaySchedule() {
-		System.out.println();
-		System.out.println("Time\t\tLunes\t\tMartes\t\tMiércoles\tJueves\t\tViernes\n");
-		for(int time = 0; time < (end-start); ++time) {
-			System.out.print(start + time + ":00\t\t");
-			for(int day = 0; day < 5; ++day) {
-				String spot1 = (schedule[day][time][0] != null) ? schedule[day][time][0].getCutName() : "EMPTY";
-				String spot2 = (schedule[day][time][1] != null) ? schedule[day][time][1].getCutName() : "EMPTY";
-				System.out.print(spot1 + "|" +  spot2 + "\t");
-				
-			}
-			System.out.println();
-		}
-		System.out.println();
-		return this;
-	}
-	
 	public static void main(String[] args) {
 		
 		Generator schedule = new Generator();
@@ -204,13 +140,12 @@ public class Generator {
 		while(true) {
 			
 			if (option == 1) {
-				System.out.print("\n--[ CREATING NEW SCHEDULE ]--\n");
-				System.out.print("Enter the name of the schedule's owner: ");
+				System.out.print("\n--[ CREATING NEW TIMETABLE ]--\n");
+				System.out.print("Enter the name of the time table's owner: ");
 				String name = input.next();
-				System.out.print("Enter the name of the schedule's binary code: ");
+				System.out.print("Enter the time table's binary code: ");
 				String code = input.next();
-				schedule.addSchedule(name, code);
-				schedule.displaySchedule();
+				schedule.addTimeTable(name, code);
 				System.out.println();
 			} else if (option == 2) {
 				System.out.print("\n--[ MODIFYING SCHEDULE ]--\n");
@@ -231,7 +166,6 @@ public class Generator {
 			} else if (option == 3) {
 				System.out.print("\n--[ VIEWING FINAL SCHEDULE ]--\n");
 				schedule.generateSchedule();
-				schedule.displaySchedule();
 			} else if (option == 4) {
 				System.out.println("Have a great day!");
 				break;
