@@ -2,21 +2,34 @@ public class Volunteer {
 	
 	private String name;
 	private String surname;
+	
+	// A boolean array containing the hourly availability of the volunteer
 	private boolean[][] availability;
 	
-	Generator gen;
+	// The number of shifts the volunteer is currently scheduled in
+	private int numOfShifts;
 	
 	/**
 	 * Creates a new volunteer with a name and a schedule of availability
 	 * @param name	name of the volunteer
 	 * @param code	binary code corresponding to volunteer availability
 	 */
-	public Volunteer(String name, String surname, String code, Generator g) {
+	public Volunteer(String name, String surname, String code) {
 		this.name = name;
 		this.surname = surname;
-		gen = g;
-		availability = new boolean[5][gen.getEnd()-gen.getStart()];
+		availability = new boolean[5][Generator.getEnd()-Generator.getStart()];
 		this.setSchedule(code);
+	}
+	
+	public Volunteer updateShiftNum(int increment) {
+		if (numOfShifts + increment > 0) {
+			numOfShifts += increment;
+		}
+		return this;
+	}
+	
+	public int getNumOfShifts() {
+		return numOfShifts;
 	}
 	
 	public boolean isSame(Volunteer vol) {
@@ -30,8 +43,7 @@ public class Volunteer {
 	public Volunteer(Volunteer vol) {
 		this.name = vol.name;
 		this.surname = vol.surname;
-		this.gen = vol.gen;
-		availability = new boolean[5][gen.getEnd()-gen.getStart()];
+		availability = new boolean[5][Generator.getEnd()-Generator.getStart()];
 		this.setSchedule(vol.getBinaryCode());
 	}
 
@@ -41,10 +53,10 @@ public class Volunteer {
 	 * @return shortened name
 	 */
 	public String getCutName() {
-		if(name.length() <= 7) {
+		if(name.length() <= 5) {
 			return name;
 		} else {
-			return name.substring(0, 6) + ".";
+			return name.substring(0, 4) + ".";
 		}
 	}
 	
@@ -55,8 +67,8 @@ public class Volunteer {
 	public Volunteer displaySchedule() {
 		System.out.println();
 		System.out.println("Time\t\tLunes\tMartes\tMiér.\tJueves\tViernes\n");
-		for(int time = 0; time < (gen.getEnd()-gen.getStart()); ++time) {
-			System.out.print(gen.getStart() + time + ":00\t\t");
+		for(int time = 0; time < (Generator.getEnd()-Generator.getStart()); ++time) {
+			System.out.print(Generator.getStart() + time + ":00\t\t");
 			for(int day = 0; day < 5; ++day) {
 				System.out.print(availability[day][time]+ "\t");
 			}
@@ -104,9 +116,9 @@ public class Volunteer {
 	 */
 	public String getBinaryCode() {
 		String code = "";
-		for(int i = 0; i < 5; ++i) {
-			for(int j = 0; j < (gen.getEnd()-gen.getStart()); ++j) {
-				if(availability[i][j] = true) {
+		for(int day = 0; day < 5; ++day) {
+			for(int hour = 0; hour < (Generator.getEnd()-Generator.getStart()); ++hour) {
+				if(availability[day][hour] == true) {
 					code += "1";
 				} else {
 					code += "0";
@@ -122,12 +134,12 @@ public class Volunteer {
 	 * @return	the Volunteer object
 	 */
 	public Volunteer setSchedule(String code) {
-		for(int i = 0; i < 5; ++i) {
-			for(int j = 0; j < (gen.getEnd()-gen.getStart()); ++j) {
-				if(code.charAt(i*(gen.getEnd()-gen.getStart())+j) == '1') {
-					availability[i][j] = true;
-				} else if(code.charAt(i*(gen.getEnd()-gen.getStart())+j) == '0') {
-					availability[i][j] = false;
+		for(int day = 0; day < 5; ++day) {
+			for(int hour = 0; hour < (Generator.getEnd()-Generator.getStart()); ++hour) {
+				if(code.charAt(day*(Generator.getEnd()-Generator.getStart())+hour) == '1') {
+					availability[day][hour] = true;
+				} else if(code.charAt(day*(Generator.getEnd()-Generator.getStart())+hour) == '0') {
+					availability[day][hour] = false;
 				}
 			}
 		}
@@ -140,9 +152,9 @@ public class Volunteer {
 	 */
 	public int getAvailableHours(Schedule sched) {
 		int AvailableHours = 0;
-		for(int i = 0; i < 5; ++i) {
-			for(int j = 0; j < (gen.getEnd()-gen.getStart()); ++j) {
-				if (availability[i][j] == true && !sched.isFull(i, j)) {
+		for(int day = 0; day < 5; ++day) {
+			for(int hour = 0; hour < (Generator.getEnd()-Generator.getStart()); ++hour) {
+				if (availability[day][hour] == true && sched.numOfVols(day, hour) < 2) {
 					++AvailableHours;
 				}
 			}
@@ -157,16 +169,16 @@ public class Volunteer {
 	public int getFirstAvailable(Schedule sched) {
 		int first = -1;
 		boolean found = false;
-		for(int i = 0; i < 5 && !found; ++i) {
-			for(int j = 0; j < (gen.getEnd()-gen.getStart()) && !found; ++j) {
-				if (availability[i][j] == true && !sched.isFull(i, j)) {
-					Volunteer[] vols = sched.volsAtPos(i, j);
+		for(int day = 0; day < 5 && !found; ++day) {
+			for(int hour = 0; hour < (Generator.getEnd()-Generator.getStart()) && !found; ++hour) {
+				if (availability[day][hour] == true && sched.numOfVols(day, hour) < 2) {
+					Volunteer[] vols = sched.volsAtPos(day, hour);
 					if(!(vols[0] == null)) {
 						if(vols[0].isSame(this)) {
 							continue;
 						}
 					}
-					first = i*(gen.getEnd()-gen.getStart())+j;
+					first = day*(Generator.getEnd()-Generator.getStart())+hour;
 					found = true;
 				}
 			}

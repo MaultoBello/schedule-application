@@ -1,17 +1,15 @@
-import java.util.Scanner;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 
 public class Generator {
 	
 	// The start and end times of the schedule (in 24-hour format)
-	private final int start = 8;
-	private final int end = 16;
+	private static final int start = 8;
+	private static final int end = 16;
 
-	private final int numOfSched = 20;
+	private final int populationSize = 20;
 	
 	// A collection of volunteer class schedules
 	private ArrayList<Volunteer> timeTables;
@@ -24,11 +22,23 @@ public class Generator {
 	 * and no volunteers
 	 */
 	public Generator() {
-		population = new Schedule[numOfSched];
-		for(int i = 0; i < numOfSched; ++i) {
-			population[i] = new Schedule(this);
-		}
+		population = new Schedule[populationSize];
 		timeTables = new ArrayList<Volunteer>();
+	}
+	
+	public Generator generatePopulation() {
+		for(int i = 0; i < populationSize; ++i) {
+			population[i] = new Schedule(timeTables);
+		}
+		return this;
+	}
+	
+	public Schedule[] getPopulation() {
+		Schedule[] toReturn = new Schedule[populationSize];
+		for(int popIndex = 0; popIndex < populationSize; ++popIndex) {
+			toReturn[popIndex] = new Schedule(population[popIndex]);
+		}
+		return toReturn;
 	}
 	
 	/**
@@ -38,9 +48,8 @@ public class Generator {
 	 * @param code	a binary code corresponding to the volunteer's availability
 	 * @return	the Generator object
 	 */
-	public Generator addTimeTable(String name, String code) {
-		Volunteer vol = new Volunteer(name, code, this);
-		vol.setSchedule(code);
+	public Generator addTimeTable(String name, String lastname, String code) {
+		Volunteer vol = new Volunteer(name, lastname, code);
 		timeTables.add(vol);
 		return this;
 	}
@@ -48,14 +57,14 @@ public class Generator {
 	/**
 	 * @return	the daily schedule start time (a positive integer 0 - 24)
 	 */
-	public int getStart() {
+	public static int getStart() {
 		return start;
 	}
 	
 	/**
 	 * @return	the daily schedule end time (a positive integer 0 - 24)
 	 */
-	public int getEnd() {
+	public static int getEnd() {
 		return end;
 	}
 	
@@ -76,7 +85,7 @@ public class Generator {
 	public void loadTimeTables() {
 		BufferedReader input = null;
 		try {
-			input = new BufferedReader(new FileReader("testData.txt"));
+			input = new BufferedReader(new FileReader("src/testData.txt"));
 		} catch (IOException e) {
 			System.out.println("Could not open file!");
 			System.exit(-1);
@@ -85,9 +94,9 @@ public class Generator {
 		try {
 			while((line = input.readLine()) != null) {
 				
-				// Each line is formatted as "NAME [SPACE] CODE"
+				// Each line is formatted as "NAME [SPACE] SURNAME [SPACE] CODE"
 				String[] data = line.split(" ");
-				this.addTimeTable(data[0], data[1]);
+				this.addTimeTable(data[0], data[1], data[2]);
 			}	
 		} catch (IOException e) {
 			System.out.println("Could not read file!");
@@ -95,38 +104,7 @@ public class Generator {
 		}
 	}
 	
-	/**
-	 * Generates the shift schedule
-	 * @return	the Generator object
-	 */
-	public Generator generateSchedule() {
-		for(int i = 0; i < 5; ++i) {
-			for(int j = 0; j < (end-start); ++j) {
-				schedule[i][j][0] = null;
-				schedule[i][j][1] = null;
-			}
-		}
-		ArrayList<Volunteer> people = (ArrayList<Volunteer>)timeTables.clone();
-		sortTables();
-		while(people.size() > 0) {
-			int first = people.get(0).getFirstAvailable(this);
-			int i = first / (end-start);
-			int j = first % (end-start);
-			if (i >= 0 && j >= 0) {
-				register(i, j, people.get(0));
-				first = people.get(0).getFirstAvailable(this);
-				i = first / (end-start);
-				j = first % (end-start);
-				if(i >= 0 && j >= 0) {
-					register(i, j, people.get(0));
-				}
-			}
-			people.remove(0);
-		}
-		return this;
-	}
-	
-	public static void main(String[] args) {
+	/*public static void main(String[] args) {
 		
 		Generator schedule = new Generator();
 		schedule.loadTimeTables();
@@ -177,5 +155,5 @@ public class Generator {
 		}
 		
 		input.close();
-	}
+	}*/
 }
