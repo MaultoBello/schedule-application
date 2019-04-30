@@ -11,6 +11,7 @@
 
 	- Consult the excel spreadsheet from the tax program and tailor this piece of software to generate outputs like that (preferably in excel format)
 		- for the record, by the end of this, the application should have as little static parameters as possible; everything should be modifiable
+	- The first mutation should have a really high mutation rate to generate a diverse population
 
 ---[[[ DOCUMENTATION]]]---
 

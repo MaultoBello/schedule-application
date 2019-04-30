@@ -40,6 +40,10 @@ public class Generator {
 		}
 		return toReturn;
 	}
+
+	/*public int getFitness(Schedule sched) {
+		
+	}*/
 	
 	/**
 	 * Adds a volunteer to the generator's database with a binary
