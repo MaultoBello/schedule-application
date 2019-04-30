@@ -2,7 +2,7 @@ import java.util.ArrayList;
 
 public class Schedule {
 	
-	private final float mutationRate = 1f;
+	private final float mutationRate = 0.1f;
 	
 	private int volsPerShift = 2;
 	
@@ -35,6 +35,7 @@ public class Schedule {
 		return false;
 	}
 	
+	// NOTE TO SELF: It feels weird using a while loop here. Consider using a for loop instead
 	public Schedule createInitial() {
 		boolean needsSorting = true;
 		
@@ -84,6 +85,11 @@ public class Schedule {
 		boolean found = false;
 		for(int day = 0; day < 5 && !found; ++day) {
 			for(int hour = 0; hour < Generator.getEnd()-Generator.getStart() && !found; ++hour) {
+				for(int spotIndex = 0; spotIndex < volsPerShift; ++spotIndex) {
+					if(schedule[day][hour][spotIndex] == null) {
+						first = day*(Generator.getEnd()-Generator.getStart())+hour;
+					}
+				}
 				if (schedule[day][hour][0] == null || schedule[day][hour][1] == null) {
 					first = day*(Generator.getEnd()-Generator.getStart())+hour;
 					found = true;
@@ -95,32 +101,52 @@ public class Schedule {
 	
 	private Schedule fitIfPossible() {
 		for(int needsPlacement = 0; needsPlacement < unscheduled.size(); ++needsPlacement) {
-			boolean swapped = false;
-			for(int day = 0; day < 5 && !swapped; day++) {
-				for(int hour = 0; hour < Generator.getEnd() - Generator.getStart() && !swapped; ++hour) {
-					if (unscheduled.get(needsPlacement).isAvailable(day,  hour)) {
-						int emptyDay = firstEmptySpot() / (Generator.getEnd()-Generator.getStart());
-						int emptyHour = firstEmptySpot() % (Generator.getEnd()-Generator.getStart());
-						int emptySpot = 0;
-						for(int spotIndex = 0; spotIndex < volsPerShift; ++spotIndex) {
-							if(schedule[emptyDay][emptyHour][spotIndex] == null) {
-								emptySpot = spotIndex;
-								break;
-							}
-						}
-						
-						for(int vol = 0; vol < volsPerShift; ++vol) {
-							if(schedule[day][hour][vol] == null || schedule[day][hour][vol].isAvailable(emptyDay, emptyHour)) {
-								swapped = swap(day, hour, 0, emptyDay, emptyHour, emptySpot);
-								if (swapped) {
-									register(day, hour, unscheduled.get(needsPlacement));
+			boolean swapped = true;
+			while (unscheduled.get(needsPlacement).getNumOfShifts() < shiftsPerVol && swapped == true) {
+				System.out.println(unscheduled.get(needsPlacement).getNumOfShifts());
+				System.out.println(unscheduled.get(needsPlacement).getName());
+				swapped = false;
+				for(int day = 0; day < 5 && !swapped; day++) {
+					for(int hour = 0; hour < Generator.getEnd() - Generator.getStart() && !swapped; ++hour) {
+						if (unscheduled.get(needsPlacement).isAvailable(day,  hour)) {
+							int emptyDay = firstEmptySpot() / (Generator.getEnd()-Generator.getStart());
+							int emptyHour = firstEmptySpot() % (Generator.getEnd()-Generator.getStart());
+							int emptySpot = 0;
+							for(int spotIndex = 0; spotIndex < volsPerShift; ++spotIndex) {
+								if(schedule[emptyDay][emptyHour][spotIndex] == null) {
+									emptySpot = spotIndex;
+									break;
 								}
 							}
+							
+							for(int vol = 0; vol < volsPerShift && !swapped; ++vol) {
+								if((day != emptyDay && hour != emptyHour) && schedule[day][hour][vol] == null || schedule[day][hour][vol].isAvailable(emptyDay, emptyHour)) {
+									swapped = swap(day, hour, vol, emptyDay, emptyHour, emptySpot);
+									if (swapped) {
+										register(day, hour, unscheduled.get(needsPlacement));
+									}
+								}
+							}
+							displaySchedule();
 						}
 					}
 				}
+			} 
+		}
+		
+		int currentIndex = 0;
+		
+		while(unscheduled.size() > 0 && currentIndex < unscheduled.size()) {
+			
+			if(unscheduled.get(currentIndex).getNumOfShifts() == shiftsPerVol) {
+				unscheduled.remove(currentIndex);
+			} else {
+				System.out.println(unscheduled.get(currentIndex).getNumOfShifts());
+				System.out.println(unscheduled.get(currentIndex).getName());
+				currentIndex++;
 			}
 		}
+		
 		return this;
 	}
 	
@@ -254,7 +280,7 @@ public class Schedule {
 			for(int volIndex = 0; volIndex < volsPerShift; ++volIndex) {
 				if(schedule[day][hour][volIndex] == null) {
 					schedule[day][hour][volIndex] = vol;
-					vol.updateShiftNum(1);
+					vol.updateShiftNum(1);					
 					break;
 				}
 			}
