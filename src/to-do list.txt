@@ -1,7 +1,48 @@
-- go through and make sure that (a) all getters are free of privacy leaks, and (b) all objects have copy constructors to use to prevent privacy leaks
-- go through and comment the code, make it clear, etc.
-- find out why singletons are a bad design patter (dummy explanation please)
-- organize your code according to which methods belong to other methods or find out a way for organization
-- after the initial schedules have been generated, make them have different mutations so that you can have a diverse rather than identical starting population
-- consult the excel spreadsheet from the tax program and tailor the program to generate outputs like that
-	- for the record, by the end of this, the application should have as little static paramaters as possible. Everything should be modifiable.
+
+---[[[ ALGORITHM DESIGN ]]]---
+
+	- Right now, the code places people in random places according to the number of hours that they have available; change this to use a density map instead where
+	people are scheduled according to which of their available shifts have the least availability amongst the remaining volunteers that haven't been scheduled.
+	Basically a particular shift should be chosen according to if less people overall can do that particular shift.
+	- Find out an algorithm to detect whether or not a viable schedule cannot exist
+	- The program needs to employ error checking to notify the user of any erroroneous states that are reached (i.e. states that should have been impossible to reach)
+
+---[[[ CODE FEATURES ]]]---
+
+	- Consult the excel spreadsheet from the tax program and tailor this piece of software to generate outputs like that (preferably in excel format)
+		- for the record, by the end of this, the application should have as little static parameters as possible; everything should be modifiable
+
+---[[[ DOCUMENTATION]]]---
+
+	- Find a tool to document your code with and do the documentation ALONG with your coding
+	
+---[[[ GENERAL CODE COMMENTS]]]---
+
+	- Go through and make sure that (a) all getters are free of privacy leaks, and (b) all objects have copy constructors to use to prevent privacy leaks
+	- Go through and comment the code and make sure that everything is as clear as can be
+	- Organize your code more according to which methods belong with other methods or find a way for organization
+	
+---[[[ MISCELLANEOUS ]]]---
+
+	- Find our why singletons are a bad design pattern (dummy explanation)
+	
+---[[[ PROGRAM FEATURES ]]]---
+
+	- Include a way for people to identify their preferences for shift placement
+	- Implement binary codes as an addon to the program since it makes entering in timetables a lot easier
+	- Before the program can  be used, it needs to be tested very indepthly; test any and all boundary conditions
+	- Add colours and emojis that the user can utilize to create custom labels for themselves
+	
+---[[[ TESTING ]]]---
+
+	- One mode for testing the success of the program could be to use the program to generate a schedule and compare that against an existing schedule prepared
+	by Lucas himself
+
+---[[[ USER INTERFACE ]]]---
+
+	- Color coded; ask Lucas to specify or do some research on your own
+	- Separate views to show individual timetables
+	- The user should be able to lock in shifts at certain points and the algorithm should take this into account
+	- By double clicking on a shift, the user can swap that shift with any other shift on the schedule. Viable swaps will be shown in vibrant colours whereas
+	non-viable swaps will be grayed out to prevent the user from choosing those
+	- The user interface should be as simple and intuitive as possible; do some research into what exactly this entails
