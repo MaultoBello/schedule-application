@@ -3,3 +3,5 @@
 - find out why singletons are a bad design patter (dummy explanation please)
 - organize your code according to which methods belong to other methods or find out a way for organization
 - after the initial schedules have been generated, make them have different mutations so that you can have a diverse rather than identical starting population
+- consult the excel spreadsheet from the tax program and tailor the program to generate outputs like that
+	- for the record, by the end of this, the application should have as little static paramaters as possible. Everything should be modifiable.
