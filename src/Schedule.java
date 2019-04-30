@@ -103,12 +103,10 @@ public class Schedule {
 		for(int needsPlacement = 0; needsPlacement < unscheduled.size(); ++needsPlacement) {
 			boolean swapped = true;
 			while (unscheduled.get(needsPlacement).getNumOfShifts() < shiftsPerVol && swapped == true) {
-				System.out.println(unscheduled.get(needsPlacement).getNumOfShifts());
-				System.out.println(unscheduled.get(needsPlacement).getName());
 				swapped = false;
 				for(int day = 0; day < 5 && !swapped; day++) {
 					for(int hour = 0; hour < Generator.getEnd() - Generator.getStart() && !swapped; ++hour) {
-						if (unscheduled.get(needsPlacement).isAvailable(day,  hour)) {
+						if (unscheduled.get(needsPlacement).isAvailable(day, hour)) {
 							int emptyDay = firstEmptySpot() / (Generator.getEnd()-Generator.getStart());
 							int emptyHour = firstEmptySpot() % (Generator.getEnd()-Generator.getStart());
 							int emptySpot = 0;
@@ -120,14 +118,14 @@ public class Schedule {
 							}
 							
 							for(int vol = 0; vol < volsPerShift && !swapped; ++vol) {
-								if((day != emptyDay && hour != emptyHour) && schedule[day][hour][vol] == null || schedule[day][hour][vol].isAvailable(emptyDay, emptyHour)) {
+								if((day != emptyDay && hour != emptyHour) && (schedule[day][hour][vol] == null || 
+										schedule[day][hour][vol].isAvailable(emptyDay, emptyHour))) {
 									swapped = swap(day, hour, vol, emptyDay, emptyHour, emptySpot);
 									if (swapped) {
 										register(day, hour, unscheduled.get(needsPlacement));
 									}
 								}
 							}
-							displaySchedule();
 						}
 					}
 				}
@@ -180,7 +178,7 @@ public class Schedule {
 		if ((v1 != null && v1.isSame(v2)) || (v1 == null && v2 == null)) return false;
 		
 		// If either are not available in the other's spot, they cannot be swapped
-		if(!((v1 != null && v1.isAvailable(d2, h2)) || (v2 != null && v2.isAvailable(d1, h1)))) return false;
+		if((v1 != null && !v1.isAvailable(d2, h2)) || (v2 != null && !v2.isAvailable(d1, h1))) return false;
 		
 		Volunteer[] volsAtFirst = volsAtPos(d1, h1);
 		Volunteer[] volsAtSecond = volsAtPos(d2, h2);
@@ -325,6 +323,12 @@ public class Schedule {
 		Generator gen = new Generator();
 		gen.loadTimeTables();
 		gen.generatePopulation();
+		
+		/*ArrayList<Volunteer> vols = gen.getTimeTables();
+		for(int i = 0; i < vols.size(); ++i) {
+			System.out.println(vols.get(i).getName());
+			vols.get(i).displaySchedule();
+		}*/
 		
 		Schedule[] population = gen.getPopulation();
 		for(int i = 0; i < population.length; ++i) {

@@ -26,6 +26,10 @@ public class Generator {
 		timeTables = new ArrayList<Volunteer>();
 	}
 	
+	public ArrayList<Volunteer> getTimeTables() {			////////////////////////
+		return timeTables;
+	}
+	
 	public Generator generatePopulation() {
 		for(int i = 0; i < populationSize; ++i) {
 			population[i] = new Schedule(timeTables);
