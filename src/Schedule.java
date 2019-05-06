@@ -28,9 +28,41 @@ public class Schedule {
 		this.schedule = s.getSchedule();
 	}
 	
+	// Traversing the array every time might not be the best solution, takes a lot of resources
+	// Can you think of something else?
+	private ArrayList<Volunteer> getCoVolunteers(Volunteer vol) {
+		ArrayList<Volunteer> toReturn = new ArrayList<Volunteer>();
+		for(int day = 0; day < 5; ++day) {
+			for(int hour = 0; hour < (Generator.getEnd()-Generator.getStart()); ++hour) {
+				Volunteer[] vols = volsAtPos(day, hour);
+				for(int volIndex = 0; volIndex < volsPerShift; ++volIndex) {
+					if (vols[volIndex].isSame(vol)) {
+						for(int volIndex2 = 0; volIndex2 < volsPerShift; ++volIndex2) {
+							if (!vols[volIndex].isSame(vol)) {
+								toReturn.add(new Volunteer(vols[volIndex]));
+							}
+						}
+					}
+				}
+			}
+		}
+		return toReturn;
+	}
+	
 	private boolean scheduleCanFitMore() {
 		for(int volIndex = 0; volIndex < unscheduled.size(); ++volIndex) {
-			if(unscheduled.get(volIndex).getFirstAvailable(this) != -1) return true;
+			if (unscheduled.get(volIndex).getFirstAvailable(this) != -1) return true;
+			/*int firstAvailable = unscheduled.get(volIndex).getFirstAvailable(this);
+			if (firstAvailable != -1) {
+				if (unscheduled.get(volIndex).getNumOfShifts() > 0) {
+					int day = firstAvailable / (Generator.getEnd()-Generator.getStart());
+					int hour = firstAvailable % (Generator.getEnd()-Generator.getStart());
+					ArrayList<Volunteer> coVols = getCoVolunteers(unscheduled.get(volIndex));
+					Volunteer[vols] potentialCoVolunteers = volsAtPos(day, hour) {
+						
+					}
+				} else return true;
+			}*/
 		}
 		return false;
 	}
@@ -180,9 +212,6 @@ public class Schedule {
 		// If either are not available in the other's spot, they cannot be swapped
 		if((v1 != null && !v1.isAvailable(d2, h2)) || (v2 != null && !v2.isAvailable(d1, h1))) return false;
 		
-		Volunteer[] volsAtFirst = volsAtPos(d1, h1);
-		Volunteer[] volsAtSecond = volsAtPos(d2, h2);
-		
 		/* If v1 is already present in the spot occupied by v2 (e.i. v1 is one of v2's co-volunteers) or vice versa, 
 		 * they cannot be swapped because that would result in two of the same volunteer in one shift (physically impossible) */
 		for(int spotIndex = 0; spotIndex < volsPerShift; ++spotIndex) {
@@ -331,6 +360,25 @@ public class Schedule {
 		}*/
 		
 		Schedule[] population = gen.getPopulation();
+		for(int i = 0; i < population.length; ++i) {
+			population[i].displaySchedule();
+			System.out.println(population[i].numOfConsecutives());
+		}
+		
+		Schedule best = gen.computeBest();
+		int staticCounter = 0;
+		while (staticCounter < 1000) {
+			gen.evolvePopulation();
+			if(best.numOfConsecutives() == gen.computeBest().numOfConsecutives()) staticCounter++;
+			else {
+				best = gen.computeBest();
+				staticCounter = 0;
+			}
+		}
+			
+		System.out.println("/////////////////////////////////////////////");
+		
+		population = gen.getPopulation();
 		for(int i = 0; i < population.length; ++i) {
 			population[i].displaySchedule();
 			System.out.println(population[i].numOfConsecutives());

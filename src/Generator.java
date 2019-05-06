@@ -11,6 +11,8 @@ public class Generator {
 
 	private final int populationSize = 20;
 	
+	private Schedule bestStored;
+	
 	// A collection of volunteer class schedules
 	private ArrayList<Volunteer> timeTables;
 	
@@ -34,6 +36,28 @@ public class Generator {
 		for(int i = 0; i < populationSize; ++i) {
 			population[i] = new Schedule(timeTables);
 		}
+		computeBest();
+		return this;
+	}
+	
+	public Schedule computeBest() {
+		Schedule bestCurrent = population[0];
+		for(int popIndex = 1; popIndex < population.length; ++popIndex) {
+			if(population[popIndex].numOfConsecutives()>bestCurrent.numOfConsecutives()) bestCurrent = population[popIndex];
+		}
+		if (bestStored == null || bestCurrent.numOfConsecutives() > bestStored.numOfConsecutives()) {
+			bestStored = new Schedule(bestCurrent);
+		}
+		return bestStored;
+	}
+	
+	public Generator evolvePopulation() {
+		Schedule currentBest = computeBest();
+		for(int popIndex = 0; popIndex < population.length; ++popIndex) {
+			population[popIndex] = new Schedule(currentBest);
+			population[popIndex].mutate();
+		}
+		computeBest();
 		return this;
 	}
 	
@@ -44,10 +68,6 @@ public class Generator {
 		}
 		return toReturn;
 	}
-
-	/*public int getFitness(Schedule sched) {
-		
-	}*/
 	
 	/**
 	 * Adds a volunteer to the generator's database with a binary

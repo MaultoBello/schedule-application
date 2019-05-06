@@ -6,6 +6,7 @@
 	Basically a particular shift should be chosen according to if less people overall can do that particular shift.
 	- Find out an algorithm to detect whether or not a viable schedule cannot exist
 	- The program needs to employ error checking to notify the user of any erroroneous states that are reached (i.e. states that should have been impossible to reach)
+	- [NEXT TO-DO] You haven't implemented the thing where no two people can have the same two shifts
 
 ---[[[ CODE FEATURES ]]]---
 
