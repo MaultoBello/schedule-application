@@ -2,6 +2,12 @@ import java.util.ArrayList;
 
 public class Schedule {
 	
+	/*      [[ TO-DO]]
+	 * 
+	 * 		So the biggest problem right now that you have to fix is that the intial schedule is being generated in
+	 * 	such a way that one volunteer is being schedule with the same other volunteer for two shifts. This shouldn't be possible.
+	 */
+	
 	private final float mutationRate = 0.1f;
 	
 	private int volsPerShift = 2;
@@ -31,38 +37,99 @@ public class Schedule {
 	// Traversing the array every time might not be the best solution, takes a lot of resources
 	// Can you think of something else?
 	private ArrayList<Volunteer> getCoVolunteers(Volunteer vol) {
+		
+		// This variable keeps track of number of shifts that we checked for this volunteer
+		// If the max number of shifts a volunteer can hold have been checked, there is no
+		// point in traversing through the rest of the for loop, so we can stop it as a way
+		// to make it more optimized
+		int shiftCheckNum = 0;
+		boolean maxShiftsChecked = false;
+		
 		ArrayList<Volunteer> toReturn = new ArrayList<Volunteer>();
-		for(int day = 0; day < 5; ++day) {
-			for(int hour = 0; hour < (Generator.getEnd()-Generator.getStart()); ++hour) {
+		for(int day = 0; day < 5 && !maxShiftsChecked; ++day) {
+			for(int hour = 0; hour < (Generator.getEnd()-Generator.getStart()) && !maxShiftsChecked; ++hour) {
 				Volunteer[] vols = volsAtPos(day, hour);
 				for(int volIndex = 0; volIndex < volsPerShift; ++volIndex) {
-					if (vols[volIndex].isSame(vol)) {
+					if (vols[volIndex] != null && vols[volIndex].isSame(vol)) {
+						shiftCheckNum++;
 						for(int volIndex2 = 0; volIndex2 < volsPerShift; ++volIndex2) {
-							if (!vols[volIndex].isSame(vol)) {
+							if (vols[volIndex2] != null && !vols[volIndex2].isSame(vol)) {
 								toReturn.add(new Volunteer(vols[volIndex]));
 							}
 						}
 					}
+				}
+				if(shiftCheckNum == shiftsPerVol) {
+					maxShiftsChecked = true;
 				}
 			}
 		}
 		return toReturn;
 	}
 	
-	private boolean scheduleCanFitMore() {
-		for(int volIndex = 0; volIndex < unscheduled.size(); ++volIndex) {
-			if (unscheduled.get(volIndex).getFirstAvailable(this) != -1) return true;
-			/*int firstAvailable = unscheduled.get(volIndex).getFirstAvailable(this);
-			if (firstAvailable != -1) {
-				if (unscheduled.get(volIndex).getNumOfShifts() > 0) {
-					int day = firstAvailable / (Generator.getEnd()-Generator.getStart());
-					int hour = firstAvailable % (Generator.getEnd()-Generator.getStart());
-					ArrayList<Volunteer> coVols = getCoVolunteers(unscheduled.get(volIndex));
-					Volunteer[vols] potentialCoVolunteers = volsAtPos(day, hour) {
+	/**
+	 * Checks if the given volunteer can be viably schedule at the given time
+	 * @param day	the day being tested for
+	 * @param hour	the time (hour) being tested for
+	 * @param vol	the volunteer being tested
+	 * @return	whether or not the given volunteer can be registered at the given time
+	 */
+	public boolean canRegister(int day, int hour, Volunteer vol) {
+		
+		// The volunteer being scheduled needs to be available at the given time
+		if (vol.isAvailable(day, hour)) {
+		
+			ArrayList<Volunteer> currentCoVolunteers = getCoVolunteers(vol);
+			Volunteer[] potentialCoVolunteers = volsAtPos(day, hour);
+			
+			/* This variable is used to break the loop if it is discovered that the potential
+			 * spot being examined is not viable for the unscheduled volunteer to inhabit */
+			boolean viable = true;
+			
+			for (int currentIndex = 0; currentIndex < currentCoVolunteers.size() && viable; ++currentIndex) {
+				for (int potentialIndex = 0; potentialIndex < potentialCoVolunteers.length && viable; ++potentialIndex) {
+					
+					// If one of the covolunteers in the potential shift spot would be the same as either the unscheduled volunteer
+					// or one of the unscheduled volunteer's current covolunteers, then the shift location is not viable
+					if (currentCoVolunteers.get(currentIndex).isSame(potentialCoVolunteers[potentialIndex]) 
+							|| vol.isSame(potentialCoVolunteers[potentialIndex])) {
+						
+						viable = false;
 						
 					}
+				}
+			}
+			
+			if (viable) {
+				return true;
+			}
+		}
+		
+		return false;
+		
+	}
+	
+	// this function allows users to be scheduled next to the same person twice, don't let this happen
+	private boolean scheduleCanFitMore() {
+		for(int volIndex = 0; volIndex < unscheduled.size(); ++volIndex) {
+			
+			Volunteer currentVol = unscheduled.get(volIndex);
+			int firstAvailable = currentVol.getFirstAvailable(this);
+			
+			if (firstAvailable != -1) {
+				
+				/* If the individual has a previously scheduled shift, then we need to take that into account
+				 * The individual CANNOT be schedule with the same person twice, he or she must have different
+				 * partners for each of his or her shifts */
+				if (unscheduled.get(volIndex).getNumOfShifts() > 0) {
+					
+					int day = firstAvailable / (Generator.getEnd()-Generator.getStart());
+					int hour = firstAvailable % (Generator.getEnd()-Generator.getStart());
+					
+					if (canRegister(day, hour, currentVol)) return true;
+					
 				} else return true;
-			}*/
+			}
 		}
 		return false;
 	}
@@ -92,9 +159,13 @@ public class Schedule {
 					int day = first / (Generator.getEnd() - Generator.getStart());
 					int hour = first % (Generator.getEnd() - Generator.getStart());
 					
-					// If the registering resulted in a shift filling up, then the available hours for volunteers might have potentially changed, so sort the list again
-					boolean isFilled = register(day, hour, current);
-					if(isFilled) needsSorting = true;
+					if(canRegister(day, hour, current)) {
+					
+						// If the registering resulted in a shift filling up, then the available hours for volunteers might have potentially changed, so sort the list again
+						boolean isFilled = register(day, hour, current);
+						if(isFilled) needsSorting = true;
+					
+					}
 					
 				} else {
 					
