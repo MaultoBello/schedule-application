@@ -49,12 +49,17 @@ public class Schedule {
 		for(int day = 0; day < 5 && !maxShiftsChecked; ++day) {
 			for(int hour = 0; hour < (Generator.getEnd()-Generator.getStart()) && !maxShiftsChecked; ++hour) {
 				Volunteer[] vols = volsAtPos(day, hour);
-				for(int volIndex = 0; volIndex < volsPerShift; ++volIndex) {
-					if (vols[volIndex] != null && vols[volIndex].isSame(vol)) {
+				for(int outerVolIndex = 0; outerVolIndex < volsPerShift; ++outerVolIndex) {
+					if (vols[outerVolIndex] != null && vols[outerVolIndex].isSame(vol)) {
 						shiftCheckNum++;
-						for(int volIndex2 = 0; volIndex2 < volsPerShift; ++volIndex2) {
-							if (vols[volIndex2] != null && !vols[volIndex2].isSame(vol)) {
-								toReturn.add(new Volunteer(vols[volIndex]));
+						for(int innerVolIndex = 0; innerVolIndex < 2; ++innerVolIndex) {
+							System.out.println("restarting loop");
+							System.out.println(innerVolIndex); 		// Always equal to zero, I don't know why
+							if (vols[innerVolIndex] != null && !vols[innerVolIndex].isSame(vol)) {
+								System.out.println(innerVolIndex);
+								Volunteer newVol = new Volunteer(vols[innerVolIndex]);
+								toReturn.add(newVol); 		// Problematic line
+								System.out.println("still in loop");
 							}
 						}
 					}
@@ -62,6 +67,13 @@ public class Schedule {
 				if(shiftCheckNum == shiftsPerVol) {
 					maxShiftsChecked = true;
 				}
+			}
+		}
+		
+		if (vol.getName().equals("Juan")) {
+			System.out.println(vol.getName());
+			for (Volunteer covol : toReturn) {
+				System.out.println(" ydfhsfhsdhsrh " + covol.getName());
 			}
 		}
 		return toReturn;
