@@ -33,7 +33,7 @@ public class Volunteer {
 	}
 	
 	public boolean isSame(Volunteer vol) {
-		return (vol == null) ? false : vol.name == name && vol.surname == surname;
+		return (vol == null) ? false : vol.name.equals(name) && vol.surname.equals(surname);
 	}
 	
 	/**

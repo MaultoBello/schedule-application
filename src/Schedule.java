@@ -36,7 +36,11 @@ public class Schedule {
 	
 	// Traversing the array every time might not be the best solution, takes a lot of resources
 	// Can you think of something else?
-	private ArrayList<Volunteer> getCoVolunteers(Volunteer vol) {
+	private ArrayList<String[]> getCoVolunteerNames(Volunteer vol) {
+		
+		// ArrayList to hold first and last name of covolunteers
+		// No need to copy over all of the covolunteer's information, it's inefficient
+		ArrayList<String[]> toReturn = new ArrayList<String[]>();
 		
 		// This variable keeps track of number of shifts that we checked for this volunteer
 		// If the max number of shifts a volunteer can hold have been checked, there is no
@@ -45,7 +49,6 @@ public class Schedule {
 		int shiftCheckNum = 0;
 		boolean maxShiftsChecked = false;
 		
-		ArrayList<Volunteer> toReturn = new ArrayList<Volunteer>();
 		for(int day = 0; day < 5 && !maxShiftsChecked; ++day) {
 			for(int hour = 0; hour < (Generator.getEnd()-Generator.getStart()) && !maxShiftsChecked; ++hour) {
 				Volunteer[] vols = volsAtPos(day, hour);
@@ -53,13 +56,8 @@ public class Schedule {
 					if (vols[outerVolIndex] != null && vols[outerVolIndex].isSame(vol)) {
 						shiftCheckNum++;
 						for(int innerVolIndex = 0; innerVolIndex < 2; ++innerVolIndex) {
-							System.out.println("restarting loop");
-							System.out.println(innerVolIndex); 		// Always equal to zero, I don't know why
 							if (vols[innerVolIndex] != null && !vols[innerVolIndex].isSame(vol)) {
-								System.out.println(innerVolIndex);
-								Volunteer newVol = new Volunteer(vols[innerVolIndex]);
-								toReturn.add(newVol); 		// Problematic line
-								System.out.println("still in loop");
+								toReturn.add(new String[]{vols[innerVolIndex].getName(), vols[innerVolIndex].getSurname()});
 							}
 						}
 					}
@@ -70,12 +68,11 @@ public class Schedule {
 			}
 		}
 		
-		if (vol.getName().equals("Juan")) {
-			System.out.println(vol.getName());
-			for (Volunteer covol : toReturn) {
-				System.out.println(" ydfhsfhsdhsrh " + covol.getName());
+		//if (vol.getName().equals("Juan")) {
+			for (String[] covol : toReturn) {
+				System.out.println(covol[0] + " " + covol[1]);
 			}
-		}
+		//}
 		return toReturn;
 	}
 	
@@ -90,32 +87,40 @@ public class Schedule {
 		
 		// The volunteer being scheduled needs to be available at the given time
 		if (vol.isAvailable(day, hour)) {
-		
-			ArrayList<Volunteer> currentCoVolunteers = getCoVolunteers(vol);
+			
+			ArrayList<String[]> currentCoVolunteerNames = getCoVolunteerNames(vol);
 			Volunteer[] potentialCoVolunteers = volsAtPos(day, hour);
 			
 			/* This variable is used to break the loop if it is discovered that the potential
 			 * spot being examined is not viable for the unscheduled volunteer to inhabit */
 			boolean viable = true;
 			
-			for (int currentIndex = 0; currentIndex < currentCoVolunteers.size() && viable; ++currentIndex) {
+			for (int currentIndex = 0; currentIndex < currentCoVolunteerNames.size() && viable; ++currentIndex) {
 				for (int potentialIndex = 0; potentialIndex < potentialCoVolunteers.length && viable; ++potentialIndex) {
 					
 					// If one of the covolunteers in the potential shift spot would be the same as either the unscheduled volunteer
 					// or one of the unscheduled volunteer's current covolunteers, then the shift location is not viable
-					if (currentCoVolunteers.get(currentIndex).isSame(potentialCoVolunteers[potentialIndex]) 
-							|| vol.isSame(potentialCoVolunteers[potentialIndex])) {
-						
-						viable = false;
-						
+					if (potentialCoVolunteers[potentialIndex] != null) {
+						if ((currentCoVolunteerNames.get(currentIndex)[0].equals(potentialCoVolunteers[potentialIndex].getName())
+								&& currentCoVolunteerNames.get(currentIndex)[1].equals(potentialCoVolunteers[potentialIndex].getSurname()))
+								|| vol.isSame(potentialCoVolunteers[potentialIndex])) {
+							
+							viable = false;
+							break;
+							
+						}
 					}
 				}
 			}
+			
+			System.out.println("hola3");
 			
 			if (viable) {
 				return true;
 			}
 		}
+		
+		System.out.println("hola5");
 		
 		return false;
 		
@@ -138,7 +143,11 @@ public class Schedule {
 					int day = firstAvailable / (Generator.getEnd()-Generator.getStart());
 					int hour = firstAvailable % (Generator.getEnd()-Generator.getStart());
 					
+					System.out.println("hola6");
+					
 					if (canRegister(day, hour, currentVol)) return true;
+					
+					System.out.println("hola4");
 					
 				} else return true;
 			}
@@ -171,7 +180,11 @@ public class Schedule {
 					int day = first / (Generator.getEnd() - Generator.getStart());
 					int hour = first % (Generator.getEnd() - Generator.getStart());
 					
+					System.out.println("hola7");
+					
 					if(canRegister(day, hour, current)) {
+						
+						System.out.println("hola88888888888888888888888888888");
 					
 						// If the registering resulted in a shift filling up, then the available hours for volunteers might have potentially changed, so sort the list again
 						boolean isFilled = register(day, hour, current);
