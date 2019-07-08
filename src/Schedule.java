@@ -38,6 +38,8 @@ public class Schedule {
 	// Can you think of something else?
 	private ArrayList<String[]> getCoVolunteerNames(Volunteer vol) {
 		
+		System.out.println("hola9");
+		
 		// ArrayList to hold first and last name of covolunteers
 		// No need to copy over all of the covolunteer's information, it's inefficient
 		ArrayList<String[]> toReturn = new ArrayList<String[]>();
@@ -68,11 +70,15 @@ public class Schedule {
 			}
 		}
 		
-		//if (vol.getName().equals("Juan")) {
 			for (String[] covol : toReturn) {
 				System.out.println(covol[0] + " " + covol[1]);
+				/*if(covol[0].equals("Daniela"))  {
+					System.out.println(vol.getName());
+					System.exit(0);
+				}*/
 			}
-		//}
+			
+			System.out.println("hola10");
 		return toReturn;
 	}
 	
@@ -86,7 +92,8 @@ public class Schedule {
 	public boolean canRegister(int day, int hour, Volunteer vol) {
 		
 		// The volunteer being scheduled needs to be available at the given time
-		if (vol.isAvailable(day, hour)) {
+		// And the given time must not be taken by other volunteers
+		if (vol.isAvailable(day, hour) && numOfVols(day, hour) < volsPerShift) {
 			
 			ArrayList<String[]> currentCoVolunteerNames = getCoVolunteerNames(vol);
 			Volunteer[] potentialCoVolunteers = volsAtPos(day, hour);
@@ -169,16 +176,25 @@ public class Schedule {
 			
 			Volunteer current = unscheduled.get(currentIndex);
 			
+			int counter = 0;
+			
 			while(current.getNumOfShifts() < volsPerShift) {
 				
+				++counter;
+				System.out.println(counter);
+				
 				// The first available time of the person with the least available hours remaining
-				int first = current.getFirstAvailable(this);
+				int first = getFirstAvailable(current);
 				
 				// A value of -1 indicates that the individual does not have any available hours remaining
 				if (first > -1) {
 					
 					int day = first / (Generator.getEnd() - Generator.getStart());
 					int hour = first % (Generator.getEnd() - Generator.getStart());
+					
+					System.out.println("day1: " + day + ", hour1: " + hour);
+					
+					System.out.println("OMG: " + canRegister(day, hour, current));
 					
 					System.out.println("hola7");
 					
@@ -189,8 +205,12 @@ public class Schedule {
 						// If the registering resulted in a shift filling up, then the available hours for volunteers might have potentially changed, so sort the list again
 						boolean isFilled = register(day, hour, current);
 						if(isFilled) needsSorting = true;
-					
+						
+						System.out.println("SEE IT: " + current.getNumOfShifts());
+						
 					}
+					
+					System.out.println("hola8");
 					
 				} else {
 					
@@ -199,6 +219,8 @@ public class Schedule {
 					break;
 				}	
 				
+				System.out.println(current.getNumOfShifts());
+				
 				if(current.getNumOfShifts() == shiftsPerVol) unscheduled.remove(currentIndex);
 			}
 		}
@@ -206,7 +228,8 @@ public class Schedule {
 		mutate();
 	
 		return this;
-	}
+}
+		
 	
 	private int firstEmptySpot() {
 		int first = -1;
@@ -225,6 +248,20 @@ public class Schedule {
 			}
 		}
 		return first;
+	}
+	
+	private int getFirstAvailable(Volunteer vol) {
+		System.out.println("hola11");
+		for(int day = 0; day < 5; ++day) {
+			for(int hour = 0; hour < (Generator.getEnd()-Generator.getStart()); ++hour) {
+				if(canRegister(day, hour, vol)) {
+					System.out.println(canRegister(day, hour, vol));
+					System.out.println("day: " + day + ", hour: " + hour);
+					return day*(Generator.getEnd()-Generator.getStart())+hour;
+				}
+			}
+		}
+		return -1;
 	}
 	
 	private Schedule fitIfPossible() {
@@ -399,11 +436,15 @@ public class Schedule {
 	 * @return	whether or not the registering resulted in a shift filling up
 	 */
 	public boolean register(int day, int hour, Volunteer vol) {
+		System.out.println("woah1");
 		if (numOfVols(day, hour) < volsPerShift) {
+			System.out.println("woah2");
 			for(int volIndex = 0; volIndex < volsPerShift; ++volIndex) {
 				if(schedule[day][hour][volIndex] == null) {
 					schedule[day][hour][volIndex] = vol;
+					System.out.println("Hello");
 					vol.updateShiftNum(1);					
+					System.out.println("woah");
 					break;
 				}
 			}
