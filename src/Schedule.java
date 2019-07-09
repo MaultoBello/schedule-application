@@ -38,8 +38,6 @@ public class Schedule {
 	// Can you think of something else?
 	private ArrayList<String[]> getCoVolunteerNames(Volunteer vol) {
 		
-		System.out.println("hola9");
-		
 		// ArrayList to hold first and last name of covolunteers
 		// No need to copy over all of the covolunteer's information, it's inefficient
 		ArrayList<String[]> toReturn = new ArrayList<String[]>();
@@ -57,7 +55,7 @@ public class Schedule {
 				for(int outerVolIndex = 0; outerVolIndex < volsPerShift; ++outerVolIndex) {
 					if (vols[outerVolIndex] != null && vols[outerVolIndex].isSame(vol)) {
 						shiftCheckNum++;
-						for(int innerVolIndex = 0; innerVolIndex < 2; ++innerVolIndex) {
+						for(int innerVolIndex = 0; innerVolIndex < volsPerShift; ++innerVolIndex) {
 							if (vols[innerVolIndex] != null && !vols[innerVolIndex].isSame(vol)) {
 								toReturn.add(new String[]{vols[innerVolIndex].getName(), vols[innerVolIndex].getSurname()});
 							}
@@ -69,16 +67,7 @@ public class Schedule {
 				}
 			}
 		}
-		
-			for (String[] covol : toReturn) {
-				System.out.println(covol[0] + " " + covol[1]);
-				/*if(covol[0].equals("Daniela"))  {
-					System.out.println(vol.getName());
-					System.exit(0);
-				}*/
-			}
 			
-			System.out.println("hola10");
 		return toReturn;
 	}
 	
@@ -91,6 +80,9 @@ public class Schedule {
 	 */
 	public boolean canRegister(int day, int hour, Volunteer vol) {
 		
+		// if the volunteer argument is null, then it can be registered anywhere
+		if(vol == null) return true;
+		
 		// The volunteer being scheduled needs to be available at the given time
 		// And the given time must not be taken by other volunteers
 		if (vol.isAvailable(day, hour) && numOfVols(day, hour) < volsPerShift) {
@@ -101,33 +93,36 @@ public class Schedule {
 			/* This variable is used to break the loop if it is discovered that the potential
 			 * spot being examined is not viable for the unscheduled volunteer to inhabit */
 			boolean viable = true;
-			
-			for (int currentIndex = 0; currentIndex < currentCoVolunteerNames.size() && viable; ++currentIndex) {
-				for (int potentialIndex = 0; potentialIndex < potentialCoVolunteers.length && viable; ++potentialIndex) {
+			for (int potentialIndex = 0; potentialIndex < potentialCoVolunteers.length && viable; ++potentialIndex) {
+				if (vol.isSame(potentialCoVolunteers[potentialIndex])) {
+					viable = false;
+					break;
+				}
+				for (int currentIndex = 0; currentIndex < currentCoVolunteerNames.size() && viable; ++currentIndex) {
 					
 					// If one of the covolunteers in the potential shift spot would be the same as either the unscheduled volunteer
 					// or one of the unscheduled volunteer's current covolunteers, then the shift location is not viable
 					if (potentialCoVolunteers[potentialIndex] != null) {
-						if ((currentCoVolunteerNames.get(currentIndex)[0].equals(potentialCoVolunteers[potentialIndex].getName())
-								&& currentCoVolunteerNames.get(currentIndex)[1].equals(potentialCoVolunteers[potentialIndex].getSurname()))
-								|| vol.isSame(potentialCoVolunteers[potentialIndex])) {
+						if (currentCoVolunteerNames.get(currentIndex)[0].equals(potentialCoVolunteers[potentialIndex].getName())
+								&& currentCoVolunteerNames.get(currentIndex)[1].equals(potentialCoVolunteers[potentialIndex].getSurname())) {
+							
+							System.out.println("yay");
 							
 							viable = false;
 							break;
 							
+							
+						} else {
+							System.out.println(currentCoVolunteerNames.get(currentIndex)[0] + " " + potentialCoVolunteers[potentialIndex].getName());
 						}
 					}
 				}
 			}
 			
-			System.out.println("hola3");
-			
 			if (viable) {
 				return true;
 			}
 		}
-		
-		System.out.println("hola5");
 		
 		return false;
 		
@@ -138,25 +133,10 @@ public class Schedule {
 		for(int volIndex = 0; volIndex < unscheduled.size(); ++volIndex) {
 			
 			Volunteer currentVol = unscheduled.get(volIndex);
-			int firstAvailable = currentVol.getFirstAvailable(this);
+			int firstAvailable = getFirstAvailable(currentVol);
 			
-			if (firstAvailable != -1) {
-				
-				/* If the individual has a previously scheduled shift, then we need to take that into account
-				 * The individual CANNOT be schedule with the same person twice, he or she must have different
-				 * partners for each of his or her shifts */
-				if (unscheduled.get(volIndex).getNumOfShifts() > 0) {
-					
-					int day = firstAvailable / (Generator.getEnd()-Generator.getStart());
-					int hour = firstAvailable % (Generator.getEnd()-Generator.getStart());
-					
-					System.out.println("hola6");
-					
-					if (canRegister(day, hour, currentVol)) return true;
-					
-					System.out.println("hola4");
-					
-				} else return true;
+			if(firstAvailable != -1) {
+				return true;
 			}
 		}
 		return false;
@@ -176,12 +156,7 @@ public class Schedule {
 			
 			Volunteer current = unscheduled.get(currentIndex);
 			
-			int counter = 0;
-			
 			while(current.getNumOfShifts() < volsPerShift) {
-				
-				++counter;
-				System.out.println(counter);
 				
 				// The first available time of the person with the least available hours remaining
 				int first = getFirstAvailable(current);
@@ -192,25 +167,9 @@ public class Schedule {
 					int day = first / (Generator.getEnd() - Generator.getStart());
 					int hour = first % (Generator.getEnd() - Generator.getStart());
 					
-					System.out.println("day1: " + day + ", hour1: " + hour);
-					
-					System.out.println("OMG: " + canRegister(day, hour, current));
-					
-					System.out.println("hola7");
-					
-					if(canRegister(day, hour, current)) {
-						
-						System.out.println("hola88888888888888888888888888888");
-					
-						// If the registering resulted in a shift filling up, then the available hours for volunteers might have potentially changed, so sort the list again
-						boolean isFilled = register(day, hour, current);
-						if(isFilled) needsSorting = true;
-						
-						System.out.println("SEE IT: " + current.getNumOfShifts());
-						
-					}
-					
-					System.out.println("hola8");
+					// If the registering resulted in a shift filling up, then the available hours for volunteers might have potentially changed, so sort the list again
+					boolean isFilled = register(day, hour, current);
+					if(isFilled) needsSorting = true;
 					
 				} else {
 					
@@ -218,8 +177,6 @@ public class Schedule {
 					currentIndex++;
 					break;
 				}	
-				
-				System.out.println(current.getNumOfShifts());
 				
 				if(current.getNumOfShifts() == shiftsPerVol) unscheduled.remove(currentIndex);
 			}
@@ -251,12 +208,9 @@ public class Schedule {
 	}
 	
 	private int getFirstAvailable(Volunteer vol) {
-		System.out.println("hola11");
 		for(int day = 0; day < 5; ++day) {
 			for(int hour = 0; hour < (Generator.getEnd()-Generator.getStart()); ++hour) {
 				if(canRegister(day, hour, vol)) {
-					System.out.println(canRegister(day, hour, vol));
-					System.out.println("day: " + day + ", hour: " + hour);
 					return day*(Generator.getEnd()-Generator.getStart())+hour;
 				}
 			}
@@ -304,8 +258,6 @@ public class Schedule {
 			if(unscheduled.get(currentIndex).getNumOfShifts() == shiftsPerVol) {
 				unscheduled.remove(currentIndex);
 			} else {
-				System.out.println(unscheduled.get(currentIndex).getNumOfShifts());
-				System.out.println(unscheduled.get(currentIndex).getName());
 				currentIndex++;
 			}
 		}
@@ -345,11 +297,8 @@ public class Schedule {
 		// If either are not available in the other's spot, they cannot be swapped
 		if((v1 != null && !v1.isAvailable(d2, h2)) || (v2 != null && !v2.isAvailable(d1, h1))) return false;
 		
-		/* If v1 is already present in the spot occupied by v2 (e.i. v1 is one of v2's co-volunteers) or vice versa, 
-		 * they cannot be swapped because that would result in two of the same volunteer in one shift (physically impossible) */
-		for(int spotIndex = 0; spotIndex < volsPerShift; ++spotIndex) {
-			if((v1 != null && v1.isSame(schedule[d2][h2][spotIndex])) || (v2 != null && v2.isSame(schedule[d1][h1][spotIndex]))) return false;
-		}
+		/* If v1 can't be registered in v2's spot or vice versa due to restrictions (see "canRegister" function) */
+		if (!canRegister(d1, h1, v2) || !canRegister(d2, h2, v1)) return false;
 		
 		// If none of the condition above are true, then the two shifts may then be logically swapped
 		return true;
@@ -436,15 +385,11 @@ public class Schedule {
 	 * @return	whether or not the registering resulted in a shift filling up
 	 */
 	public boolean register(int day, int hour, Volunteer vol) {
-		System.out.println("woah1");
 		if (numOfVols(day, hour) < volsPerShift) {
-			System.out.println("woah2");
 			for(int volIndex = 0; volIndex < volsPerShift; ++volIndex) {
 				if(schedule[day][hour][volIndex] == null) {
 					schedule[day][hour][volIndex] = vol;
-					System.out.println("Hello");
 					vol.updateShiftNum(1);					
-					System.out.println("woah");
 					break;
 				}
 			}
