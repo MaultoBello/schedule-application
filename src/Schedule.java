@@ -2,12 +2,6 @@ import java.util.ArrayList;
 
 public class Schedule {
 	
-	/*      [[ TO-DO]]
-	 * 
-	 * 		So the biggest problem right now that you have to fix is that the intial schedule is being generated in
-	 * 	such a way that one volunteer is being schedule with the same other volunteer for two shifts. This shouldn't be possible.
-	 */
-	
 	private final float mutationRate = 0.1f;
 	
 	private int volsPerShift = 2;
@@ -85,7 +79,7 @@ public class Schedule {
 		
 		// The volunteer being scheduled needs to be available at the given time
 		// And the given time must not be taken by other volunteers
-		if (vol.isAvailable(day, hour) && numOfVols(day, hour) < volsPerShift) {
+		if (vol.isAvailable(day, hour)) {
 			
 			ArrayList<String[]> currentCoVolunteerNames = getCoVolunteerNames(vol);
 			Volunteer[] potentialCoVolunteers = volsAtPos(day, hour);
@@ -106,14 +100,10 @@ public class Schedule {
 						if (currentCoVolunteerNames.get(currentIndex)[0].equals(potentialCoVolunteers[potentialIndex].getName())
 								&& currentCoVolunteerNames.get(currentIndex)[1].equals(potentialCoVolunteers[potentialIndex].getSurname())) {
 							
-							System.out.println("yay");
-							
 							viable = false;
 							break;
 							
 							
-						} else {
-							System.out.println(currentCoVolunteerNames.get(currentIndex)[0] + " " + potentialCoVolunteers[potentialIndex].getName());
 						}
 					}
 				}
@@ -166,7 +156,7 @@ public class Schedule {
 					
 					int day = first / (Generator.getEnd() - Generator.getStart());
 					int hour = first % (Generator.getEnd() - Generator.getStart());
-					
+
 					// If the registering resulted in a shift filling up, then the available hours for volunteers might have potentially changed, so sort the list again
 					boolean isFilled = register(day, hour, current);
 					if(isFilled) needsSorting = true;
@@ -182,7 +172,7 @@ public class Schedule {
 			}
 		}
 		
-		mutate();
+		//mutate();
 	
 		return this;
 }
@@ -196,11 +186,9 @@ public class Schedule {
 				for(int spotIndex = 0; spotIndex < volsPerShift; ++spotIndex) {
 					if(schedule[day][hour][spotIndex] == null) {
 						first = day*(Generator.getEnd()-Generator.getStart())+hour;
+						found = true;
+						break;
 					}
-				}
-				if (schedule[day][hour][0] == null || schedule[day][hour][1] == null) {
-					first = day*(Generator.getEnd()-Generator.getStart())+hour;
-					found = true;
 				}
 			}
 		}
@@ -210,7 +198,7 @@ public class Schedule {
 	private int getFirstAvailable(Volunteer vol) {
 		for(int day = 0; day < 5; ++day) {
 			for(int hour = 0; hour < (Generator.getEnd()-Generator.getStart()); ++hour) {
-				if(canRegister(day, hour, vol)) {
+				if(canRegister(day, hour, vol) && numOfVols(day, hour) < volsPerShift) {
 					return day*(Generator.getEnd()-Generator.getStart())+hour;
 				}
 			}
@@ -221,6 +209,7 @@ public class Schedule {
 	private Schedule fitIfPossible() {
 		for(int needsPlacement = 0; needsPlacement < unscheduled.size(); ++needsPlacement) {
 			boolean swapped = true;
+			
 			while (unscheduled.get(needsPlacement).getNumOfShifts() < shiftsPerVol && swapped == true) {
 				swapped = false;
 				for(int day = 0; day < 5 && !swapped; day++) {
@@ -254,7 +243,6 @@ public class Schedule {
 		int currentIndex = 0;
 		
 		while(unscheduled.size() > 0 && currentIndex < unscheduled.size()) {
-			
 			if(unscheduled.get(currentIndex).getNumOfShifts() == shiftsPerVol) {
 				unscheduled.remove(currentIndex);
 			} else {
@@ -389,11 +377,11 @@ public class Schedule {
 			for(int volIndex = 0; volIndex < volsPerShift; ++volIndex) {
 				if(schedule[day][hour][volIndex] == null) {
 					schedule[day][hour][volIndex] = vol;
-					vol.updateShiftNum(1);					
+					vol.updateShiftNum(1);
 					break;
 				}
 			}
-			if(vol.getNumOfShifts() == volsPerShift) {
+			if(numOfVols(day, hour) == volsPerShift) {
 				return true;
 			}
 		}

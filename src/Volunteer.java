@@ -43,6 +43,7 @@ public class Volunteer {
 	public Volunteer(Volunteer vol) {
 		this.name = vol.name;
 		this.surname = vol.surname;
+		this.numOfShifts = vol.numOfShifts;
 		availability = new boolean[5][Generator.getEnd()-Generator.getStart()];
 		this.setSchedule(vol.getBinaryCode());
 	}
