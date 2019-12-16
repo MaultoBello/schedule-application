@@ -176,7 +176,7 @@ public class Schedule {
 					break;
 				}	
 				
-				//if(current.getNumOfShifts() == shiftsPerVol) unscheduled.remove(currentIndex);
+				if(current.getNumOfShifts() == shiftsPerVol) unscheduled.remove(currentIndex);
 			}
 		}
 		
@@ -391,7 +391,7 @@ public class Schedule {
 				}
 			}
 			if(numOfVols(day, hour) == volsPerShift) {
-				unscheduled.remove(getUnscheduled(vol));
+				return true;
 			}
 		}
 		return false;
@@ -405,12 +405,12 @@ public class Schedule {
 				break;
 			}
 		}
-		if(getUnscheduled(vol) == null) {
+		if(identifyUnscheduled(vol) == null) {
 			unscheduled.add(vol);
 		}
 	}
 	
-	public Volunteer getUnscheduled(Volunteer toFind) {
+	public Volunteer identifyUnscheduled(Volunteer toFind) {
 		for(int volIndex = 0; volIndex < unscheduled.size(); ++volIndex) {
 			if (unscheduled.get(volIndex).isSame(toFind)) return unscheduled.get(volIndex);
 		}

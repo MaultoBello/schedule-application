@@ -220,11 +220,9 @@ public class GUI extends Application {
 			normalizeButtons();
 			isSwitchMode = false;
 		} else {
-			if (volBut.getVolunteer() != null) {
-				toSwitch = volBut;
-				darkenButtons();
-				isSwitchMode = true;
-			}
+			toSwitch = volBut;
+			darkenButtons();
+			isSwitchMode = true;
 		}
 	}
 	
