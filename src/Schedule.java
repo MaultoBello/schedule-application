@@ -1,5 +1,8 @@
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 
+// This type of saving is not 
 public class Schedule {
 	
 	private final float mutationRate = 0.1f;
@@ -15,17 +18,23 @@ public class Schedule {
 	private ArrayList<Volunteer> unscheduled;
 	
 	public Schedule(ArrayList<Volunteer> volunteers) {
-		schedule = new Volunteer[5][Generator.getEnd()-Generator.getStart()][volsPerShift];
+		schedule = new Volunteer[5][Generator.getShiftsInDay()][volsPerShift];
 		unscheduled = new ArrayList<Volunteer>();
 		for(int i = 0; i < volunteers.size(); ++i) {
 			unscheduled.add(new Volunteer(volunteers.get(i)));
 		}
+		Collections.shuffle(unscheduled);
 		createInitial();
 	}
 	
 	public Schedule(Schedule s) {
 		this.unscheduled = s.getUnscheduled();
 		this.schedule = s.getSchedule();
+	}
+	
+	public Schedule(Volunteer[][][] schedArr, ArrayList<Volunteer> unschedArrList) {
+		this.unscheduled = unschedArrList;
+		this.schedule = schedArr;
 	}
 	
 	// Traversing the array every time might not be the best solution, takes a lot of resources
@@ -44,7 +53,7 @@ public class Schedule {
 		boolean maxShiftsChecked = false;
 		
 		for(int day = 0; day < 5 && !maxShiftsChecked; ++day) {
-			for(int hour = 0; hour < (Generator.getEnd()-Generator.getStart()) && !maxShiftsChecked; ++hour) {
+			for(int hour = 0; hour < (Generator.getShiftsInDay()) && !maxShiftsChecked; ++hour) {
 				Volunteer[] vols = volsAtPos(day, hour);
 				for(int outerVolIndex = 0; outerVolIndex < volsPerShift; ++outerVolIndex) {
 					if (vols[outerVolIndex] != null && vols[outerVolIndex].isSame(vol)) {
@@ -99,7 +108,6 @@ public class Schedule {
 					if (potentialCoVolunteers[potentialIndex] != null) {
 						if (currentCoVolunteerNames.get(currentIndex)[0].equals(potentialCoVolunteers[potentialIndex].getName())
 								&& currentCoVolunteerNames.get(currentIndex)[1].equals(potentialCoVolunteers[potentialIndex].getSurname())) {
-							
 							viable = false;
 							break;
 							
@@ -154,8 +162,8 @@ public class Schedule {
 				// A value of -1 indicates that the individual does not have any available hours remaining
 				if (first > -1) {
 					
-					int day = first / (Generator.getEnd() - Generator.getStart());
-					int hour = first % (Generator.getEnd() - Generator.getStart());
+					int day = first / Generator.getShiftsInDay();
+					int hour = first % Generator.getShiftsInDay();
 
 					// If the registering resulted in a shift filling up, then the available hours for volunteers might have potentially changed, so sort the list again
 					boolean isFilled = register(day, hour, current);
@@ -168,7 +176,7 @@ public class Schedule {
 					break;
 				}	
 				
-				if(current.getNumOfShifts() == shiftsPerVol) unscheduled.remove(currentIndex);
+				//if(current.getNumOfShifts() == shiftsPerVol) unscheduled.remove(currentIndex);
 			}
 		}
 		
@@ -182,10 +190,10 @@ public class Schedule {
 		int first = -1;
 		boolean found = false;
 		for(int day = 0; day < 5 && !found; ++day) {
-			for(int hour = 0; hour < Generator.getEnd()-Generator.getStart() && !found; ++hour) {
+			for(int hour = 0; hour < Generator.getShiftsInDay() && !found; ++hour) {
 				for(int spotIndex = 0; spotIndex < volsPerShift; ++spotIndex) {
 					if(schedule[day][hour][spotIndex] == null) {
-						first = day*(Generator.getEnd()-Generator.getStart())+hour;
+						first = day*(Generator.getShiftsInDay())+hour;
 						found = true;
 						break;
 					}
@@ -197,9 +205,9 @@ public class Schedule {
 	
 	private int getFirstAvailable(Volunteer vol) {
 		for(int day = 0; day < 5; ++day) {
-			for(int hour = 0; hour < (Generator.getEnd()-Generator.getStart()); ++hour) {
+			for(int hour = 0; hour < Generator.getShiftsInDay(); ++hour) {
 				if(canRegister(day, hour, vol) && numOfVols(day, hour) < volsPerShift) {
-					return day*(Generator.getEnd()-Generator.getStart())+hour;
+					return day*(Generator.getShiftsInDay())+hour;
 				}
 			}
 		}
@@ -213,12 +221,13 @@ public class Schedule {
 			while (unscheduled.get(needsPlacement).getNumOfShifts() < shiftsPerVol && swapped == true) {
 				swapped = false;
 				for(int day = 0; day < 5 && !swapped; day++) {
-					for(int hour = 0; hour < Generator.getEnd() - Generator.getStart() && !swapped; ++hour) {
+					for(int hour = 0; hour < Generator.getShiftsInDay() && !swapped; ++hour) {
 						if (unscheduled.get(needsPlacement).isAvailable(day, hour)) {
-							int emptyDay = firstEmptySpot() / (Generator.getEnd()-Generator.getStart());
-							int emptyHour = firstEmptySpot() % (Generator.getEnd()-Generator.getStart());
+							int emptyDay = firstEmptySpot() / (Generator.getShiftsInDay());
+							int emptyHour = firstEmptySpot() % (Generator.getShiftsInDay());
 							int emptySpot = 0;
 							for(int spotIndex = 0; spotIndex < volsPerShift; ++spotIndex) {
+								System.out.println(emptyDay + " " + emptyHour + " " + spotIndex);
 								if(schedule[emptyDay][emptyHour][spotIndex] == null) {
 									emptySpot = spotIndex;
 									break;
@@ -256,13 +265,13 @@ public class Schedule {
 	// Right now you say vols < volsPerShift, but at some point in the future, you're going to have 
 	public Schedule mutate() {
 		for(int day = 0; day < 5; ++day) {
-			for(int hour = 0; hour < Generator.getEnd()-Generator.getStart(); ++hour) {
+			for(int hour = 0; hour < Generator.getShiftsInDay(); ++hour) {
 				for(int vol = 0; vol < volsPerShift; ++vol) {
 					if(Math.random() < mutationRate) {
 						
 						int dayToSwap = (int)Math.floor(Math.random()*5);
 						
-						int hourToSwap = (int)Math.floor(Math.random()*(Generator.getEnd()-Generator.getStart()));
+						int hourToSwap = (int)Math.floor(Math.random()*(Generator.getShiftsInDay()));
 						
 						int volToSwap = (int)Math.floor(Math.random()*volsPerShift);
 						
@@ -277,7 +286,7 @@ public class Schedule {
 		return this;
 	}
 	
-	private boolean areSwapable(int d1, int h1, Volunteer v1, int d2, int h2, Volunteer v2) {
+	public boolean areSwapable(int d1, int h1, Volunteer v1, int d2, int h2, Volunteer v2) {
 		
 		// If both are either equal or null, no point in swapping them
 		if ((v1 != null && v1.isSame(v2)) || (v1 == null && v2 == null)) return false;
@@ -301,7 +310,7 @@ public class Schedule {
 	 * @param index2	the index of the volunteer being swapped in the second shift (first volunteer, second volunteer, etc.)
 	 * @return	a boolean value corresponding to whether or not the swap was successful
 	 */
-	private boolean swap(int d1, int h1, int index1, int d2, int h2, int index2) {
+	public boolean swap(int d1, int h1, int index1, int d2, int h2, int index2) {
 		if(areSwapable(d1, h1, schedule[d1][h1][index1], d2, h2, schedule[d2][h2][index2])) {
 			Volunteer temp = schedule[d1][h1][index1];
 			schedule[d1][h1][index1] = schedule[d2][h2][index2];
@@ -321,7 +330,7 @@ public class Schedule {
 	public int numOfConsecutives() {
 		int num = 0;
 		for(int day = 0; day < 5; ++day) {
-			for(int hour = 0; hour < Generator.getEnd()-Generator.getStart()-1; ++hour) {
+			for(int hour = 0; hour < Generator.getShiftsInDay()-1; ++hour) {
 				for(int firstIndex = 0; firstIndex < volsPerShift; ++firstIndex) {
 					for(int secondIndex = 0; secondIndex < volsPerShift; ++secondIndex) {
 						if(schedule[day][hour][firstIndex] == null) break;
@@ -345,9 +354,9 @@ public class Schedule {
 	}
 	
 	public Volunteer[][][] getSchedule() {
-		Volunteer[][][] toReturn = new Volunteer[5][Generator.getEnd()-Generator.getStart()][volsPerShift];
+		Volunteer[][][] toReturn = new Volunteer[5][Generator.getShiftsInDay()][volsPerShift];
 		for(int day = 0; day < 5; ++day) {
-			for(int hour = 0; hour < Generator.getEnd()-Generator.getStart(); ++hour) {
+			for(int hour = 0; hour < Generator.getShiftsInDay(); ++hour) {
 				for(int spot = 0; spot < volsPerShift; ++spot) {
 					if(!(schedule[day][hour][spot] == null)) {
 						toReturn[day][hour][spot] = new Volunteer(schedule[day][hour][spot]);
@@ -382,10 +391,30 @@ public class Schedule {
 				}
 			}
 			if(numOfVols(day, hour) == volsPerShift) {
-				return true;
+				unscheduled.remove(getUnscheduled(vol));
 			}
 		}
 		return false;
+	}
+	
+	public void unregister(int day, int hour, Volunteer vol) {
+		for(int volIndex = 0; volIndex < volsPerShift; ++volIndex) {
+			if(schedule[day][hour][volIndex].isSame(vol)) {
+				schedule[day][hour][volIndex] = null;
+				vol.updateShiftNum(-1);
+				break;
+			}
+		}
+		if(getUnscheduled(vol) == null) {
+			unscheduled.add(vol);
+		}
+	}
+	
+	public Volunteer getUnscheduled(Volunteer toFind) {
+		for(int volIndex = 0; volIndex < unscheduled.size(); ++volIndex) {
+			if (unscheduled.get(volIndex).isSame(toFind)) return unscheduled.get(volIndex);
+		}
+		return null;
 	}
 
 	public Schedule sortTables() {	
@@ -404,8 +433,8 @@ public class Schedule {
 	public Schedule displaySchedule() {
 		System.out.println();
 		System.out.println("Time\t\tLunes\t\t\tMartes\t\t\tMiércoles\t\tJueves\t\t\tViernes\n");
-		for(int time = 0; time < (Generator.getEnd()-Generator.getStart()); ++time) {
-			System.out.print(Generator.getStart() + time + ":00\t\t");
+		for(int time = 0; time < Generator.getShiftsInDay(); ++time) {
+			System.out.print("hour "+ time + "\t\t");
 			for(int day = 0; day < 5; ++day) {
 				String spot1 = (schedule[day][time][0] != null) ? schedule[day][time][0].getCutName() : "EMPTY";
 				String spot2 = (schedule[day][time][1] != null) ? schedule[day][time][1].getCutName() : "EMPTY";
@@ -417,44 +446,5 @@ public class Schedule {
 		System.out.println();
 		return this;
 	}	
-	
-	public static void main(String[] args) {
-		Generator gen = new Generator();
-		gen.loadTimeTables();
-		gen.generatePopulation();
-		
-		/*ArrayList<Volunteer> vols = gen.getTimeTables();
-		for(int i = 0; i < vols.size(); ++i) {
-			System.out.println(vols.get(i).getName());
-			vols.get(i).displaySchedule();
-		}*/
-		
-		Schedule[] population = gen.getPopulation();
-		for(int i = 0; i < population.length; ++i) {
-			population[i].displaySchedule();
-			System.out.println(population[i].numOfConsecutives());
-		}
-		
-		Schedule best = gen.computeBest();
-		int staticCounter = 0;
-		while (staticCounter < 1000) {
-			gen.evolvePopulation();
-			if(best.numOfConsecutives() == gen.computeBest().numOfConsecutives()) staticCounter++;
-			else {
-				best = gen.computeBest();
-				staticCounter = 0;
-			}
-		}
-			
-		System.out.println("/////////////////////////////////////////////");
-		
-		population = gen.getPopulation();
-		for(int i = 0; i < population.length; ++i) {
-			population[i].displaySchedule();
-			System.out.println(population[i].numOfConsecutives());
-		}
-		
-		
-	}
 	
 }

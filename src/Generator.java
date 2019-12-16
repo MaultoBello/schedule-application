@@ -2,12 +2,11 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import javafx.scene.control.ProgressBar;
 
 public class Generator {
 	
-	// The start and end times of the schedule (in 24-hour format)
-	private static final int start = 8;
-	private static final int end = 16;
+	private static final int shiftsInDay = 7;
 
 	private final int populationSize = 20;
 	
@@ -53,7 +52,8 @@ public class Generator {
 	
 	public Generator evolvePopulation() {
 		Schedule currentBest = computeBest();
-		for(int popIndex = 0; popIndex < population.length; ++popIndex) {
+		population[0] =   new Schedule(currentBest);
+		for(int popIndex = 1; popIndex < population.length; ++popIndex) {
 			population[popIndex] = new Schedule(currentBest);
 			population[popIndex].mutate();
 		}
@@ -69,6 +69,10 @@ public class Generator {
 		return toReturn;
 	}
 	
+	public static int getShiftsInDay() {
+		return shiftsInDay;
+	}
+	
 	/**
 	 * Adds a volunteer to the generator's database with a binary
 	 * code that corresponds to the volunteers weekly availability
@@ -80,20 +84,6 @@ public class Generator {
 		Volunteer vol = new Volunteer(name, lastname, code);
 		timeTables.add(vol);
 		return this;
-	}
-	
-	/**
-	 * @return	the daily schedule start time (a positive integer 0 - 24)
-	 */
-	public static int getStart() {
-		return start;
-	}
-	
-	/**
-	 * @return	the daily schedule end time (a positive integer 0 - 24)
-	 */
-	public static int getEnd() {
-		return end;
 	}
 	
 	/**
