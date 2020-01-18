@@ -95,46 +95,34 @@ public class GUI extends Application {
 		scheduleDisplay.setHgap(20);
 		layout.add(scheduleDisplay, 0, 1);
 		
-		volButtons = new VolunteerButton[5][Generator.getShiftsInDay()][2];
+		volButtons = new VolunteerButton[5][Schedule.getShiftsInDay()][2];
 
-		Scene scene = new Scene(layout, 300, 250);
+		Scene scene = new Scene(layout, 1500, 800);
 		primaryStage.setScene(scene);
 		primaryStage.show();
 	}
 	
 	private void initiateGeneration(ActionEvent event) {
 		
-		System.out.println("Starting Generation");
-		
 		Generator gen = new Generator();
 		gen.loadTimeTables();
 		gen.generatePopulation();
 		Schedule[] population = gen.getPopulation();
 		
-		Schedule best = gen.computeBest();
+		Schedule best = gen.getBest();
 		int staticCounter = 0;
 		// TODO update this number as required
-		while (staticCounter < 50) {
-			double ratio =  (Double.valueOf(gen.computeBest().numOfConsecutives()))/40;
-			System.out.println(ratio);
+		while (staticCounter < 250) {
 			gen.evolvePopulation();
-			if(best.numOfConsecutives() == gen.computeBest().numOfConsecutives()) staticCounter++;
+			if(best.numOfConsecutives() == gen.getBest().numOfConsecutives()) staticCounter++;
 			else {
-				best = gen.computeBest();
+				best = gen.getBest();
 				staticCounter = 0;
 			}
 		}
 		
 		storedSched = gen.getPopulation()[0];
 		updateDisplay();
-			
-		System.out.println("/////////////////////////////////////////////");
-		
-		population = gen.getPopulation();
-		for(int i = 0; i < population.length; ++i) {
-			population[i].displaySchedule();
-			System.out.println(population[i].numOfConsecutives());
-		}
 		
 	}
 	
@@ -154,7 +142,7 @@ public class GUI extends Application {
 		scheduleDisplay.add(new Label("2:00 - 3:00"), 0, 6);
 		scheduleDisplay.add(new Label("3:00 - 4:30"), 0, 7);
 		
-		for(int time = 0; time < (Generator.getShiftsInDay()); ++time) {
+		for(int time = 0; time < (Schedule.getShiftsInDay()); ++time) {
 			for(int day = 0; day < 5; ++day) {
 				volButtons[day][time][0] = null;
 				volButtons[day][time][1] = null;
@@ -163,7 +151,7 @@ public class GUI extends Application {
 	}
 	
 	private void normalizeButtons() {
-		for(int time = 0; time < (Generator.getShiftsInDay()); ++time) {
+		for(int time = 0; time < (Schedule.getShiftsInDay()); ++time) {
 			for(int day = 0; day < 5; ++day) {
 				if (volButtons[day][time][0].getVolunteer() == null) {
 					volButtons[day][time][0].setStyle("-fx-base: #07b7ed");
@@ -184,7 +172,7 @@ public class GUI extends Application {
 		int day = toSwitch.getDay();
 		int time = toSwitch.getTime();
 		int spot = toSwitch.getSpot();
-		for(int timeIndex = 0; timeIndex < (Generator.getShiftsInDay()); ++timeIndex) {
+		for(int timeIndex = 0; timeIndex < (Schedule.getShiftsInDay()); ++timeIndex) {
 			for(int dayIndex = 0; dayIndex < 5; ++dayIndex) {
 					VolunteerButton volBut1 = volButtons[dayIndex][timeIndex][0];
 					VolunteerButton volBut2 = volButtons[dayIndex][timeIndex][1];
@@ -229,7 +217,7 @@ public class GUI extends Application {
 	private void updateDisplay() {
 		Volunteer[][][] toDisplay = storedSched.getSchedule();
 		blankDisplay();
-		for(int time = 0; time < (Generator.getShiftsInDay()); ++time) {
+		for(int time = 0; time < (Schedule.getShiftsInDay()); ++time) {
 			for(int day = 0; day < 5; ++day) {
 				
 				Volunteer vol1 = toDisplay[day][time][0];

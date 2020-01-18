@@ -2,14 +2,16 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+
 import javafx.scene.control.ProgressBar;
 
+// Purpose: to generate, store, mutate, and evolve a population
 public class Generator {
-	
-	private static final int shiftsInDay = 7;
 
 	private final int populationSize = 20;
-	
+
 	private Schedule bestStored;
 	
 	// A collection of volunteer class schedules
@@ -27,7 +29,8 @@ public class Generator {
 		timeTables = new ArrayList<Volunteer>();
 	}
 	
-	public ArrayList<Volunteer> getTimeTables() {			////////////////////////
+	// FIXME Memory leak
+	public ArrayList<Volunteer> getTimeTables() {
 		return timeTables;
 	}
 	
@@ -35,30 +38,28 @@ public class Generator {
 		for(int i = 0; i < populationSize; ++i) {
 			population[i] = new Schedule(timeTables);
 		}
-		computeBest();
+		storeBest();
 		return this;
-	}
-	
-	public Schedule computeBest() {
-		Schedule bestCurrent = population[0];
-		for(int popIndex = 1; popIndex < population.length; ++popIndex) {
-			if(population[popIndex].numOfConsecutives()>bestCurrent.numOfConsecutives()) bestCurrent = population[popIndex];
-		}
-		if (bestStored == null || bestCurrent.numOfConsecutives() > bestStored.numOfConsecutives()) {
-			bestStored = new Schedule(bestCurrent);
-		}
-		return bestStored;
 	}
 	
 	public Generator evolvePopulation() {
-		Schedule currentBest = computeBest();
-		population[0] =   new Schedule(currentBest);
+		
+		// Population is sorted by best # of consecutive shifts, so all children are offspring of population[0]
 		for(int popIndex = 1; popIndex < population.length; ++popIndex) {
-			population[popIndex] = new Schedule(currentBest);
+			population[popIndex] = new Schedule(population[0]);
 			population[popIndex].mutate();
 		}
-		computeBest();
+		storeBest();
 		return this;
+	}
+	
+	private void storeBest() {
+		Arrays.sort(population, Comparator.comparing(Schedule::numOfConsecutives).reversed());
+		bestStored = population[0];
+	}
+	
+	public Schedule getBest() {
+		return bestStored;
 	}
 	
 	public Schedule[] getPopulation() {
@@ -67,10 +68,6 @@ public class Generator {
 			toReturn[popIndex] = new Schedule(population[popIndex]);
 		}
 		return toReturn;
-	}
-	
-	public static int getShiftsInDay() {
-		return shiftsInDay;
 	}
 	
 	/**
@@ -97,6 +94,8 @@ public class Generator {
 		timeTables.get(index).setAvailability(day, hour, avail);
 	}
 	
+	// FIXME Make it more open to possible file format mismatches
+	// FIXME Have it display errors for when binary code is not 35 digits
 	/**
 	 * Loads saved volunteer time tables from a file
 	 */

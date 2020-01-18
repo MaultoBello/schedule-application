@@ -15,7 +15,7 @@ public class VolunteerFileIO {
 			FileOutputStream fileOut = new FileOutputStream(schedFile);
 			ObjectOutputStream objOut = new ObjectOutputStream(fileOut);
 			for(int dayIndex = 0; dayIndex < 5; ++dayIndex) {
-				for(int timeIndex = 0; timeIndex < Generator.getShiftsInDay(); ++timeIndex) {
+				for(int timeIndex = 0; timeIndex < Schedule.getShiftsInDay(); ++timeIndex) {
 					objOut.writeObject(scheduleArr[dayIndex][timeIndex][0]);
 					objOut.writeObject(scheduleArr[dayIndex][timeIndex][1]);
 				}
@@ -32,13 +32,13 @@ public class VolunteerFileIO {
 	
 	@SuppressWarnings("unchecked")
 	public static Schedule loadSchedule(File schedFile) {
-		Volunteer[][][] scheduleArr = new Volunteer[5][Generator.getShiftsInDay()][2];
+		Volunteer[][][] scheduleArr = new Volunteer[5][Schedule.getShiftsInDay()][2];
 		ArrayList<Volunteer> unscheduledArrList = new ArrayList<Volunteer>();
 		try {
 			FileInputStream fileIn = new FileInputStream(schedFile);
 			ObjectInputStream objIn = new ObjectInputStream(fileIn);
 			for(int dayIndex = 0; dayIndex < 5; ++dayIndex) {
-				for(int timeIndex = 0; timeIndex < Generator.getShiftsInDay(); ++timeIndex) {
+				for(int timeIndex = 0; timeIndex < Schedule.getShiftsInDay(); ++timeIndex) {
 					scheduleArr[dayIndex][timeIndex][0] = (Volunteer) objIn.readObject();
 					scheduleArr[dayIndex][timeIndex][1] = (Volunteer) objIn.readObject();
 				}

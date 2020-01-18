@@ -19,7 +19,7 @@ public class Volunteer implements Serializable {
 	public Volunteer(String name, String surname, String code) {
 		this.name = name;
 		this.surname = surname;
-		availability = new boolean[5][Generator.getShiftsInDay()];
+		availability = new boolean[5][Schedule.getShiftsInDay()];
 		this.setSchedule(code);
 	}
 	
@@ -46,7 +46,7 @@ public class Volunteer implements Serializable {
 		this.name = vol.name;
 		this.surname = vol.surname;
 		this.numOfShifts = vol.numOfShifts;
-		availability = new boolean[5][Generator.getShiftsInDay()];
+		availability = new boolean[5][Schedule.getShiftsInDay()];
 		this.setSchedule(vol.getBinaryCode());
 	}
 
@@ -70,7 +70,7 @@ public class Volunteer implements Serializable {
 	public Volunteer displaySchedule() {
 		System.out.println();
 		System.out.println("Time\t\tLunes\tMartes\tMiér.\tJueves\tViernes\n");
-		for(int time = 0; time < Generator.getShiftsInDay(); ++time) {
+		for(int time = 0; time < Schedule.getShiftsInDay(); ++time) {
 			System.out.print("hour "+ time + "\t\t");
 			for(int day = 0; day < 5; ++day) {
 				System.out.print(availability[day][time]+ "\t");
@@ -120,7 +120,7 @@ public class Volunteer implements Serializable {
 	public String getBinaryCode() {
 		String code = "";
 		for(int day = 0; day < 5; ++day) {
-			for(int hour = 0; hour < (Generator.getShiftsInDay()); ++hour) {
+			for(int hour = 0; hour < (Schedule.getShiftsInDay()); ++hour) {
 				if(availability[day][hour] == true) {
 					code += "1";
 				} else {
@@ -138,10 +138,10 @@ public class Volunteer implements Serializable {
 	 */
 	public Volunteer setSchedule(String code) {
 		for(int day = 0; day < 5; ++day) {
-			for(int hour = 0; hour < (Generator.getShiftsInDay()); ++hour) {
-				if(code.charAt(day*(Generator.getShiftsInDay())+hour) == '1') {
+			for(int hour = 0; hour < (Schedule.getShiftsInDay()); ++hour) {
+				if(code.charAt(day*(Schedule.getShiftsInDay())+hour) == '1') {
 					availability[day][hour] = true;
-				} else if(code.charAt(day*(Generator.getShiftsInDay())+hour) == '0') {
+				} else if(code.charAt(day*(Schedule.getShiftsInDay())+hour) == '0') {
 					availability[day][hour] = false;
 				}
 			}
@@ -156,7 +156,7 @@ public class Volunteer implements Serializable {
 	public int getAvailableHours(Schedule sched) {
 		int AvailableHours = 0;
 		for(int day = 0; day < 5; ++day) {
-			for(int hour = 0; hour < (Generator.getShiftsInDay()); ++hour) {
+			for(int hour = 0; hour < (Schedule.getShiftsInDay()); ++hour) {
 				if (availability[day][hour] == true && sched.numOfVols(day, hour) < 2) {
 					++AvailableHours;
 				}
@@ -173,7 +173,7 @@ public class Volunteer implements Serializable {
 		int first = -1;
 		boolean found = false;
 		for(int day = 0; day < 5 && !found; ++day) {
-			for(int hour = 0; hour < (Generator.getShiftsInDay()) && !found; ++hour) {
+			for(int hour = 0; hour < (Schedule.getShiftsInDay()) && !found; ++hour) {
 				if (availability[day][hour] == true && sched.numOfVols(day, hour) < 2) {
 					Volunteer[] vols = sched.volsAtPos(day, hour);
 					if(!(vols[0] == null)) {
@@ -181,7 +181,7 @@ public class Volunteer implements Serializable {
 							continue;
 						}
 					}
-					first = day*(Generator.getShiftsInDay())+hour;
+					first = day*(Schedule.getShiftsInDay())+hour;
 					found = true;
 				}
 			}
